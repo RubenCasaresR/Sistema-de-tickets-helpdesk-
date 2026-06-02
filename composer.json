@@ -1,0 +1,14 @@
+{
+    "name": "helpdesk/reportes",
+    "description": "Sistema de Tickets Helpdesk",
+    "type": "project",
+    "authors": [
+        {
+            "name": "RubenCasaresR",
+            "email": "rubencasares04@gmail.com"
+        }
+    ],
+    "require": {
+        "mpdf/mpdf": "^8.3"
+    }
+}
