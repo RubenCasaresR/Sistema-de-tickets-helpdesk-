@@ -12,8 +12,16 @@ if (isset($_SESSION['success_message'])) {
     unset($_SESSION['success_message']);
 }
 
-// Aprobar usuario
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aprobar_id'])) {
+// Aprobar usuario (only if 'activo' column exists)
+$hasActivo = false;
+try {
+    $colCheck = $pdo->query("SHOW COLUMNS FROM usuarios LIKE 'activo'");
+    $hasActivo = (bool) $colCheck->fetch();
+} catch (PDOException $e) {
+    $hasActivo = false;
+}
+
+if ($hasActivo && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['aprobar_id'])) {
     $csrf_token = $_POST['csrf_token'] ?? '';
     $aprobar_id = (int) $_POST['aprobar_id'];
     if (validarTokenCSRF($csrf_token) && $aprobar_id > 0) {
@@ -57,10 +65,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['eliminar_id'])) {
     }
 }
 
-$stmt = $pdo->query('SELECT id, nombre, email, rol, activo, fecha_creacion FROM usuarios ORDER BY activo ASC, fecha_creacion DESC');
+$selectFields = 'id, nombre, email, rol, fecha_creacion' . ($hasActivo ? ', activo' : '');
+$orderPrefix = $hasActivo ? 'activo ASC, ' : '';
+$stmt = $pdo->query("SELECT {$selectFields} FROM usuarios ORDER BY {$orderPrefix}fecha_creacion DESC");
 $usuarios = $stmt->fetchAll();
 $csrf_token = generarTokenCSRF();
-$pendientes = count(array_filter($usuarios, fn($u) => empty($u['activo'])));
+$pendientes = $hasActivo ? count(array_filter($usuarios, fn($u) => empty($u['activo']))) : 0;
 ?>
 <?php require_once __DIR__ . '/../includes/header.php'; ?>
 
@@ -90,17 +100,18 @@ $pendientes = count(array_filter($usuarios, fn($u) => empty($u['activo'])));
                     <th>Nombre</th>
                     <th>Email</th>
                     <th>Rol</th>
-                    <th>Estado</th>
+                    <?php if ($hasActivo): ?><th>Estado</th><?php endif; ?>
                     <th>Registro</th>
                     <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
                 <?php foreach ($usuarios as $u): ?>
-                <tr class="<?= empty($u['activo']) ? 'row-pending' : '' ?>">
+                <tr<?php if ($hasActivo): ?> class="<?= empty($u['activo']) ? 'row-pending' : '' ?>"<?php endif; ?>>
                     <td><?= htmlspecialchars($u['nombre']) ?></td>
                     <td><?= htmlspecialchars($u['email']) ?></td>
                     <td><span class="badge badge-<?= $u['rol'] === 'admin' ? 'urgente' : ($u['rol'] === 'soporte' ? 'en_progreso' : 'cerrado') ?>"><?= htmlspecialchars($u['rol']) ?></span></td>
+                    <?php if ($hasActivo): ?>
                     <td>
                         <?php if (empty($u['activo'])): ?>
                             <span class="badge badge-cerrado">Pendiente</span>
@@ -108,10 +119,11 @@ $pendientes = count(array_filter($usuarios, fn($u) => empty($u['activo'])));
                             <span class="badge badge-resuelto">Activo</span>
                         <?php endif; ?>
                     </td>
+                    <?php endif; ?>
                     <td class="text-small text-muted"><?= htmlspecialchars(date('d/m/Y', strtotime($u['fecha_creacion']))) ?></td>
                     <td>
                         <div class="flex gap-2">
-                            <?php if (empty($u['activo'])): ?>
+                            <?php if ($hasActivo && empty($u['activo'])): ?>
                             <form method="post" action="" style="display:inline">
                                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
                                 <input type="hidden" name="aprobar_id" value="<?= (int) $u['id'] ?>">

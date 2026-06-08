@@ -1,5 +1,6 @@
 <?php
 session_start();
+require_once __DIR__ . '/conexion.php';
 
 if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
     header('Location: ' . url('login.php'));

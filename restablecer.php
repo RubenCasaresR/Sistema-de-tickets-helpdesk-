@@ -1,13 +1,12 @@
 <?php
 session_start();
+require_once __DIR__ . '/conexion.php';
+require_once __DIR__ . '/includes/auth_check.php';
 
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
     header('Location: ' . url('index.php'));
     exit;
 }
-
-require_once __DIR__ . '/conexion.php';
-require_once __DIR__ . '/includes/auth_check.php';
 
 $error   = '';
 $success = '';

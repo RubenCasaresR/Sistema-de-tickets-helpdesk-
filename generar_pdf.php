@@ -161,7 +161,7 @@ ob_start();
                 &nbsp;|&nbsp; <strong>Cerrado:</strong> <?= htmlspecialchars(date('d/m/Y H:i', strtotime($ticket['fecha_cierre']))) ?>
             <?php endif; ?>
         </div>
-        <div class="descripcion"><?= htmlspecialchars($ticket['descripcion']) ?></div>
+        <div class="descripcion"><?= sanitizarDescripcion($ticket['descripcion']) ?></div>
 
         <div class="avances-section">
             <h4>Avances registrados</h4>
@@ -176,7 +176,7 @@ ob_start();
                             &nbsp;·&nbsp; <?= htmlspecialchars($com['rol']) ?>
                             &nbsp;·&nbsp; <?= htmlspecialchars(date('d/m/Y H:i', strtotime($com['fecha']))) ?>
                         </div>
-                        <div class="texto"><?= htmlspecialchars($com['mensaje']) ?></div>
+                        <div class="texto"><?= sanitizarDescripcion($com['mensaje']) ?></div>
                     </div>
                 <?php endforeach; ?>
             <?php endif; ?>

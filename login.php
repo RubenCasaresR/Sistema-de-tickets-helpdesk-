@@ -21,12 +21,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $pdo  = obtenerConexion();
-            $stmt = $pdo->prepare('SELECT id, nombre, email, password, rol, activo FROM usuarios WHERE email = :email LIMIT 1');
+            // Check if 'activo' column exists (pre-migration compat)
+            $hasActivo = false;
+            try {
+                $colCheck = $pdo->query("SHOW COLUMNS FROM usuarios LIKE 'activo'");
+                $hasActivo = (bool) $colCheck->fetch();
+            } catch (PDOException $e) {
+                $hasActivo = false;
+            }
+
+            $selectCols = 'id, nombre, email, password, rol' . ($hasActivo ? ', activo' : '');
+            $stmt = $pdo->prepare("SELECT {$selectCols} FROM usuarios WHERE email = :email LIMIT 1");
             $stmt->execute([':email' => $email]);
             $usuario = $stmt->fetch();
 
             if ($usuario && password_verify($password, $usuario['password'])) {
-                if (empty($usuario['activo'])) {
+                if ($hasActivo && empty($usuario['activo'])) {
                     $error = 'Tu cuenta esta pendiente de aprobacion por un administrador.';
                 } else {
                     session_regenerate_id(true);

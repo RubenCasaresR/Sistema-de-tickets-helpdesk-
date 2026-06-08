@@ -238,7 +238,7 @@ $page_title = 'Reportes';
                         <?php endif; ?>
                     </div>
                     <div class="report-description">
-                        <?= nl2br(htmlspecialchars($ticket['descripcion'])) ?>
+                        <?= sanitizarDescripcion($ticket['descripcion']) ?>
                     </div>
 
                     <!-- Avances / Comentarios -->
@@ -255,7 +255,7 @@ $page_title = 'Reportes';
                                         <span class="text-muted text-small"><?= htmlspecialchars($com['rol']) ?></span>
                                         <span class="text-muted text-small"><?= htmlspecialchars(date('d/m/Y H:i', strtotime($com['fecha']))) ?></span>
                                     </div>
-                                    <div class="report-avance-text"><?= nl2br(htmlspecialchars($com['mensaje'])) ?></div>
+                                    <div class="report-avance-text"><?= sanitizarDescripcion($com['mensaje']) ?></div>
                                 </div>
                             <?php endforeach; ?>
                         <?php endif; ?>

@@ -1,2 +1,2 @@
-ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS activo TINYINT(1) NOT NULL DEFAULT 0 AFTER password;
-UPDATE usuarios SET activo = 1;
+ALTER TABLE usuarios ADD COLUMN activo TINYINT(1) NOT NULL DEFAULT 0;
+UPDATE usuarios SET activo = 1 WHERE activo = 0;

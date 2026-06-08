@@ -46,7 +46,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = 'El correo ya esta registrado.';
                 } else {
                     $hash = password_hash($password, PASSWORD_DEFAULT);
-                    $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, password, rol, activo) VALUES (:nombre, :email, :password, :rol, 0)');
+                    // Check if 'activo' column exists (pre-migration compat)
+                    $hasActivo = false;
+                    try {
+                        $colCheck = $pdo->query("SHOW COLUMNS FROM usuarios LIKE 'activo'");
+                        $hasActivo = (bool) $colCheck->fetch();
+                    } catch (PDOException $e) {
+                        $hasActivo = false;
+                    }
+                    if ($hasActivo) {
+                        $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, password, rol, activo) VALUES (:nombre, :email, :password, :rol, 0)');
+                    } else {
+                        $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, password, rol) VALUES (:nombre, :email, :password, :rol)');
+                    }
                     $stmt->execute([
                         ':nombre'   => $nombre,
                         ':email'    => $email,
@@ -54,7 +66,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':rol'      => 'cliente',
                     ]);
 
-                    $success = 'Cuenta creada exitosamente. Ahora un administrador debe aprobar tu registro antes de que puedas iniciar sesion.';
+                    $success = $hasActivo
+                        ? 'Cuenta creada exitosamente. Ahora un administrador debe aprobar tu registro antes de que puedas iniciar sesion.'
+                        : 'Cuenta creada exitosamente. Ahora puedes iniciar sesion.';
                     $nombre  = '';
                     $email   = '';
                 }

@@ -25,8 +25,12 @@ if (isset($_SESSION['success_message'])) {
 }
 
 // Pending users notification
-$pendUsers = $pdo->query("SELECT COUNT(*) FROM usuarios WHERE activo = 0 OR activo IS NULL")->fetchColumn();
-$pendingUsers = (int) $pendUsers;
+$pendingUsers = 0;
+try {
+    $pendingUsers = (int) $pdo->query("SELECT COUNT(*) FROM usuarios WHERE activo = 0 OR activo IS NULL")->fetchColumn();
+} catch (PDOException $e) {
+    $pendingUsers = 0;
+}
 
 $filtro_estado = $_GET['estado'] ?? '';
 $filtro_prioridad = $_GET['prioridad'] ?? '';
