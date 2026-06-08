@@ -1,0 +1,26 @@
+# Dependencies
+/vendor/
+
+# Uploaded files
+/uploads/tickets/*/
+!/uploads/tickets/.htaccess
+
+# Environment
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Composer
+composer.lock

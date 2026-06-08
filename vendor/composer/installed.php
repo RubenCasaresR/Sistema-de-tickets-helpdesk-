@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => 'helpdesk/reportes',
-        'pretty_version' => '1.0.0+no-version-set',
-        'version' => '1.0.0.0',
-        'reference' => null,
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => 'a9f48f17a982d5dd9b0f8e0a8e5733742743275c',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         'helpdesk/reportes' => array(
-            'pretty_version' => '1.0.0+no-version-set',
-            'version' => '1.0.0.0',
-            'reference' => null,
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => 'a9f48f17a982d5dd9b0f8e0a8e5733742743275c',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -61,6 +61,15 @@
             'reference' => '996434e5492cb4c3edcb9168db6fbb1359ef965a',
             'type' => 'library',
             'install_path' => __DIR__ . '/../paragonie/random_compat',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'phpmailer/phpmailer' => array(
+            'pretty_version' => 'v7.1.1',
+            'version' => '7.1.1.0',
+            'reference' => '1bc1716a507a65e039d4ac9d9adebbbd0d346e15',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../phpmailer/phpmailer',
             'aliases' => array(),
             'dev_requirement' => false,
         ),

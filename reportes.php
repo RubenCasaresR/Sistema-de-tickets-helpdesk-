@@ -56,8 +56,21 @@ if ($generado) {
     }
     $sql .= ' ORDER BY t.fecha_creacion DESC';
 
-    $stmt = $pdo->prepare($sql);
-    $stmt->execute($params);
+    // Count total for pagination
+    $countSql = 'SELECT COUNT(*) AS cnt FROM (' . $sql . ') AS sub';
+    $countStmt = $pdo->prepare($countSql);
+    $countStmt->execute($params);
+    $totalTickets = (int) $countStmt->fetch()['cnt'];
+    $page = max(1, (int) ($_GET['page'] ?? 1));
+    $per_page = 20;
+    $totalPages = max(1, (int) ceil($totalTickets / $per_page));
+
+    $pagedSql = $sql . ' LIMIT :limit OFFSET :offset';
+    $stmt = $pdo->prepare($pagedSql);
+    foreach ($params as $k => $v) $stmt->bindValue($k, $v);
+    $stmt->bindValue(':limit', $per_page, PDO::PARAM_INT);
+    $stmt->bindValue(':offset', ($page - 1) * $per_page, PDO::PARAM_INT);
+    $stmt->execute();
     $tickets = $stmt->fetchAll();
 
     // Batch obtener comentarios de todos los tickets
@@ -81,6 +94,7 @@ if ($generado) {
 }
 
 $csrf_token = generarTokenCSRF();
+$page_title = 'Reportes';
 ?>
 <?php require_once __DIR__ . '/includes/header.php'; ?>
 
@@ -96,6 +110,13 @@ $csrf_token = generarTokenCSRF();
         <a href="<?= htmlspecialchars($pdf_url) ?>" class="btn btn-primary" target="_blank">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
             Descargar PDF
+        </a>
+        <?php
+        $csv_params = $_GET;
+        $csv_url = '/helpdesk/generar_csv.php?' . http_build_query($csv_params);
+        ?>
+        <a href="<?= htmlspecialchars($csv_url) ?>" class="btn btn-outline" style="margin-left:8px">
+            CSV
         </a>
     <?php endif; ?>
 </div>
@@ -138,11 +159,11 @@ $csrf_token = generarTokenCSRF();
 </div>
 
 <?php if (!$generado): ?>
-    <div class="text-center" style="padding:80px 24px">
-        <p class="text-muted" style="font-size:1.1rem">Selecciona los filtros y haz clic en <strong>Generar Reporte</strong> para ver los resultados.</p>
+    <div class="text-center p-6">
+        <p class="text-muted text-lg">Selecciona los filtros y haz clic en <strong>Generar Reporte</strong> para ver los resultados.</p>
     </div>
 <?php elseif (count($tickets) === 0): ?>
-    <div class="text-center" style="padding:48px 24px">
+    <div class="text-center p-5">
         <p class="text-muted">No se encontraron tickets con los filtros seleccionados.</p>
     </div>
 <?php else: ?>
@@ -243,6 +264,20 @@ $csrf_token = generarTokenCSRF();
             </div>
         <?php endforeach; ?>
     </div>
+
+    <!-- Pagination -->
+    <?php if ($totalPages > 1): ?>
+    <div class="pagination" style="margin-top:24px;display:flex;justify-content:center;gap:4px">
+        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+            <?php
+            $params_url = $_GET;
+            $params_url['page'] = $i;
+            $qs = http_build_query($params_url);
+            ?>
+            <a href="?<?= $qs ?>" class="btn btn-sm <?= $i === $page ? 'btn-primary' : 'btn-outline' ?>"><?= $i ?></a>
+        <?php endfor; ?>
+    </div>
+    <?php endif; ?>
 <?php endif; ?>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>

@@ -19,55 +19,61 @@ $nombre  = '';
 $email   = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $nombre  = trim($_POST['nombre'] ?? '');
-    $email   = trim($_POST['email'] ?? '');
-    $password = $_POST['password'] ?? '';
-    $confirmar = $_POST['confirmar_password'] ?? '';
-
-    if ($nombre === '' || $email === '' || $password === '' || $confirmar === '') {
-        $error = 'Todos los campos son obligatorios.';
-    } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        $error = 'El formato del correo electrónico no es válido.';
-    } elseif (strlen($password) < 6) {
-        $error = 'La contraseña debe tener al menos 6 caracteres.';
-    } elseif ($password !== $confirmar) {
-        $error = 'Las contraseñas no coinciden.';
+    if (!validarTokenCSRF($_POST['csrf_token'] ?? '')) {
+        $error = 'Token de seguridad invalido.';
     } else {
-        try {
-            $pdo = obtenerConexion();
+        $nombre  = trim($_POST['nombre'] ?? '');
+        $email   = trim($_POST['email'] ?? '');
+        $password = $_POST['password'] ?? '';
+        $confirmar = $_POST['confirmar_password'] ?? '';
 
-            $check = $pdo->prepare('SELECT id FROM usuarios WHERE email = :email LIMIT 1');
-            $check->execute([':email' => $email]);
+        if ($nombre === '' || $email === '' || $password === '' || $confirmar === '') {
+            $error = 'Todos los campos son obligatorios.';
+        } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = 'El formato del correo electronico no es valido.';
+        } elseif (strlen($password) < 6) {
+            $error = 'La contrasena debe tener al menos 6 caracteres.';
+        } elseif ($password !== $confirmar) {
+            $error = 'Las contrasenas no coinciden.';
+        } else {
+            try {
+                $pdo = obtenerConexion();
 
-            if ($check->fetch()) {
-                $error = 'El correo ya está registrado.';
-            } else {
-                $hash = password_hash($password, PASSWORD_DEFAULT);
-                $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, password, rol) VALUES (:nombre, :email, :password, :rol)');
-                $stmt->execute([
-                    ':nombre'   => $nombre,
-                    ':email'    => $email,
-                    ':password' => $hash,
-                    ':rol'      => 'cliente',
-                ]);
+                $check = $pdo->prepare('SELECT id FROM usuarios WHERE email = :email LIMIT 1');
+                $check->execute([':email' => $email]);
 
-                $success = 'Cuenta creada exitosamente. Ahora puedes iniciar sesión.';
-                $nombre  = '';
-                $email   = '';
+                if ($check->fetch()) {
+                    $error = 'El correo ya esta registrado.';
+                } else {
+                    $hash = password_hash($password, PASSWORD_DEFAULT);
+                    $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, password, rol) VALUES (:nombre, :email, :password, :rol)');
+                    $stmt->execute([
+                        ':nombre'   => $nombre,
+                        ':email'    => $email,
+                        ':password' => $hash,
+                        ':rol'      => 'cliente',
+                    ]);
+
+                    $success = 'Cuenta creada exitosamente. Ahora puedes iniciar sesion.';
+                    $nombre  = '';
+                    $email   = '';
+                }
+            } catch (PDOException $e) {
+                error_log('Error en registro: ' . $e->getMessage());
+                $error = 'Error interno del servidor. Intente mas tarde.';
             }
-        } catch (PDOException $e) {
-            error_log('Error en registro: ' . $e->getMessage());
-            $error = 'Error interno del servidor. Intente más tarde.';
         }
     }
 }
+$csrf_token = generarTokenCSRF();
+$page_title = 'Registro';
 ?>
 <?php require_once __DIR__ . '/includes/header.php'; ?>
 
 <div class="auth-page">
     <div class="auth-card">
         <h1>Crear Cuenta</h1>
-        <p class="auth-subtitle">Regístrate como cliente</p>
+        <p class="auth-subtitle">Registrate como cliente</p>
 
         <?php if ($error !== ''): ?>
             <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
@@ -77,29 +83,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         <?php endif; ?>
 
         <form method="post" action="">
+            <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
             <div class="form-group">
                 <label for="nombre">Nombre completo</label>
                 <input type="text" id="nombre" name="nombre" class="form-control" placeholder="Tu nombre" required value="<?= htmlspecialchars($nombre) ?>">
             </div>
             <div class="form-group">
-                <label for="email">Correo electrónico</label>
+                <label for="email">Correo electronico</label>
                 <input type="email" id="email" name="email" class="form-control" placeholder="tu@correo.com" required value="<?= htmlspecialchars($email) ?>">
             </div>
             <div class="form-group">
-                <label for="password">Contraseña</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="Mínimo 6 caracteres" required minlength="6">
+<label for="password">Contrasena</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Minimo 6 caracteres" required minlength="6">
             </div>
             <div class="form-group">
-                <label for="confirmar_password">Confirmar contraseña</label>
-                <input type="password" id="confirmar_password" name="confirmar_password" class="form-control" placeholder="Repite la contraseña" required minlength="6">
+                <label for="confirmar_password">Confirmar contrasena</label>
+                <input type="password" id="confirmar_password" name="confirmar_password" class="form-control" placeholder="Repite la contrasena" required minlength="6">
             </div>
             <button type="submit" class="btn btn-primary btn-block">Crear Cuenta</button>
         </form>
 
         <div class="auth-links">
-            ¿Ya tienes cuenta? <a href="/helpdesk/login.php">Inicia sesión</a>
+            ¿Ya tienes cuenta? <a href="/helpdesk/login.php">Inicia sesion</a>
         </div>
     </div>
 </div>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+

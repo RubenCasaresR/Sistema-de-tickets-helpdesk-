@@ -24,31 +24,38 @@ $error   = '';
 $titulo  = $ticket['titulo'];
 $descripcion = $ticket['descripcion'];
 $prioridad   = $ticket['prioridad'];
+$categoria_id = (int) ($ticket['categoria_id'] ?? 0);
+
+$catStmt = $pdo->query("SELECT id, nombre FROM categorias WHERE activo = 1 ORDER BY nombre");
+$categorias = $catStmt->fetchAll();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $titulo       = trim($_POST['titulo'] ?? '');
     $descripcion  = trim($_POST['descripcion'] ?? '');
     $prioridad    = $_POST['prioridad'] ?? 'media';
+    $categoria_id = (int) ($_POST['categoria_id'] ?? 0);
     $csrf_token   = $_POST['csrf_token'] ?? '';
 
     if (!validarTokenCSRF($csrf_token)) {
-        $error = 'Token de seguridad inválido. Intente de nuevo.';
-    } elseif ($titulo === '' || $descripcion === '') {
-        $error = 'El título y la descripción son obligatorios.';
+        $error = 'Token de seguridad invalido. Intente de nuevo.';
+    } elseif ($titulo === '' || trim(strip_tags($descripcion)) === '') {
+        $error = 'El titulo y la descripcion son obligatorios.';
     } elseif (!in_array($prioridad, ['baja', 'media', 'alta', 'urgente'], true)) {
-        $error = 'Prioridad inválida.';
+        $error = 'Prioridad invalida.';
     } else {
+        $descripcion = sanitizarDescripcion($descripcion, '<h1><h2><h3>');
         try {
             $upd = $pdo->prepare('
                 UPDATE tickets
-                SET titulo = :titulo, descripcion = :descripcion, prioridad = :prioridad
+                SET titulo = :titulo, descripcion = :descripcion, prioridad = :prioridad, categoria_id = :categoria_id
                 WHERE id = :id
             ');
             $upd->execute([
-                ':titulo'      => $titulo,
-                ':descripcion' => $descripcion,
-                ':prioridad'   => $prioridad,
-                ':id'          => $ticket_id,
+                ':titulo'        => $titulo,
+                ':descripcion'   => $descripcion,
+                ':prioridad'     => $prioridad,
+                ':categoria_id'  => $categoria_id > 0 ? $categoria_id : null,
+                ':id'            => $ticket_id,
             ]);
 
             $_SESSION['success_message'] = 'Ticket actualizado correctamente.';
@@ -56,12 +63,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         } catch (PDOException $e) {
             error_log('Error al editar ticket: ' . $e->getMessage());
-            $error = 'Error al actualizar el ticket. Intente más tarde.';
+            $error = 'Error al actualizar el ticket. Intente mas tarde.';
         }
     }
 }
 
 $csrf_token = generarTokenCSRF();
+$page_title = 'Editar ' . ($ticket['folio'] ?? '');
 ?>
 <?php require_once __DIR__ . '/includes/header.php'; ?>
 
@@ -80,8 +88,8 @@ $csrf_token = generarTokenCSRF();
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
 
             <div class="form-group">
-                <label for="titulo">Título</label>
-                <input type="text" id="titulo" name="titulo" class="form-control" placeholder="Resume tu solicitud en una línea" required value="<?= htmlspecialchars($titulo) ?>">
+                <label for="titulo">Titulo</label>
+                <input type="text" id="titulo" name="titulo" class="form-control" placeholder="Resume tu solicitud en una linea" required value="<?= htmlspecialchars($titulo) ?>">
             </div>
 
             <div class="form-group">
@@ -95,8 +103,19 @@ $csrf_token = generarTokenCSRF();
             </div>
 
             <div class="form-group">
-                <label for="descripcion">Descripción</label>
-                <textarea id="descripcion" name="descripcion" class="form-control" placeholder="Describe detalladamente el problema o solicitud..." required><?= htmlspecialchars($descripcion) ?></textarea>
+                <label for="categoria_id">Categoria</label>
+                <select id="categoria_id" name="categoria_id" class="form-control">
+                    <option value="">— Sin categoria —</option>
+                    <?php foreach ($categorias as $cat): ?>
+                        <option value="<?= (int) $cat['id'] ?>" <?= (int) $cat['id'] === $categoria_id ? 'selected' : '' ?>><?= htmlspecialchars($cat['nombre']) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+
+            <div class="quill-wrapper">
+                <label>Descripcion</label>
+                <div class="quill-editor" data-target="descripcion" data-placeholder="Describe detalladamente el problema o solicitud..." data-content="<?= htmlspecialchars($descripcion) ?>"></div>
+                <input type="hidden" name="descripcion" value="">
             </div>
 
             <div class="flex gap-4">
@@ -108,3 +127,4 @@ $csrf_token = generarTokenCSRF();
 </div>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+

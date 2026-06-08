@@ -1,0 +1,2 @@
+-- 002_tareas: Task manager tables
+-- Applied automatically by migrate.php

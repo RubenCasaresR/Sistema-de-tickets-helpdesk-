@@ -1,0 +1,2 @@
+-- 001_initial: Core tables from database.sql
+-- Applied automatically by migrate.php

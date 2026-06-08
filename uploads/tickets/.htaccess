@@ -1,0 +1,12 @@
+# Bloquear ejecución de PHP en uploads
+php_flag engine off
+
+# Negar acceso a archivos de configuración
+<FilesMatch "\.(htaccess|htpasswd|ini|log|sh|sql)$">
+    Require all denied
+</FilesMatch>
+
+# Opcional: solo permitir ciertos formatos
+<FilesMatch "\.(php|phtml|php3|php4|php5|php7|php8|inc|pl|cgi|py|asp|aspx)$">
+    Require all denied
+</FilesMatch>

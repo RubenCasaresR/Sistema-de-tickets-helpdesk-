@@ -1,4 +1,3 @@
-﻿
 -- ============================================================
 -- Sistema de Tickets Helpdesk
 -- Database: MySQL 8.0+
@@ -10,19 +9,9 @@ USE helpdesk;
 -- ============================================================
 -- TABLA: tickets
 -- ============================================================
-DROP TABLE IF EXISTS tarea_historial;
-DROP TABLE IF EXISTS tarea_tiempo;
-DROP TABLE IF EXISTS tarea_etiquetas;
-DROP TABLE IF EXISTS etiquetas;
-DROP TABLE IF EXISTS tarea_comentarios;
-DROP TABLE IF EXISTS tarea_subtareas;
-DROP TABLE IF EXISTS tareas;
 DROP TABLE IF EXISTS comentarios_ticket;
-DROP TABLE IF EXISTS ticket_historial;
-DROP TABLE IF EXISTS archivos_ticket;
 DROP TABLE IF EXISTS tickets;
 DROP TABLE IF EXISTS categorias;
-DROP TABLE IF EXISTS password_resets;
 DROP TABLE IF EXISTS usuarios;
 
 -- ============================================================
@@ -109,24 +98,10 @@ CREATE TABLE IF NOT EXISTS archivos_ticket (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ============================================================
--- TABLA: ticket_historial (Auditoría de cambios en tickets)
--- ============================================================
-CREATE TABLE IF NOT EXISTS ticket_historial (
-    id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    ticket_id INT UNSIGNED NOT NULL,
-    usuario_id INT UNSIGNED NOT NULL,
-    accion VARCHAR(50) NOT NULL,
-    detalle TEXT DEFAULT NULL,
-    fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE,
-    FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
-CREATE INDEX idx_historial_ticket ON ticket_historial(ticket_id);
-
--- ============================================================
 -- TABLA: password_resets
 -- ============================================================
+DROP TABLE IF EXISTS password_resets;
+
 CREATE TABLE password_resets (
     id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     usuario_id INT UNSIGNED NOT NULL,
@@ -249,9 +224,7 @@ CREATE TABLE IF NOT EXISTS tarea_historial (
 INSERT IGNORE INTO etiquetas (nombre, color) VALUES
     ('bug', '#dc2626'),
     ('mejora', '#6366f1'),
-    ('documentaci\u00f3n', '#0891b2'),
+    ('documentación', '#0891b2'),
     ('urgente', '#ef4444'),
     ('mantenimiento', '#f59e0b'),
     ('desarrollo', '#10b981');
-
-

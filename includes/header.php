@@ -8,11 +8,16 @@ if (session_status() === PHP_SESSION_NONE) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema de Tickets - Helpdesk</title>
+    <title><?= isset($page_title) ? htmlspecialchars($page_title) . ' — ' : '' ?>Helpdesk</title>
+    <link rel="icon" type="image/svg+xml" href="/helpdesk/assets/img/favicon.svg">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="/helpdesk/assets/css/style.css">
+    <?php if (function_exists('generarTokenCSRF')): ?>
+    <meta name="csrf-token" content="<?= htmlspecialchars(generarTokenCSRF()) ?>">
+    <?php endif; ?>
 </head>
 <body>
 <?php if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true): ?>
@@ -25,13 +30,38 @@ if (session_status() === PHP_SESSION_NONE) {
             <?php endif; ?>
             <?php if (in_array($_SESSION['rol'], ['soporte', 'admin'], true)): ?>
                 <a href="/helpdesk/panel_admin.php" class="<?= basename($_SERVER['PHP_SELF']) === 'panel_admin.php' ? 'active' : '' ?>">Dashboard</a>
+                <a href="/helpdesk/tareas.php" class="<?= basename($_SERVER['PHP_SELF']) === 'tareas.php' || strpos(basename($_SERVER['PHP_SELF']), 'tarea_') === 0 ? 'active' : '' ?>">
+                    Tareas
+                    <?php
+                    $pendientes = 0;
+                    try {
+                        $cntPdo = obtenerConexion();
+                        $cntStmt = $cntPdo->query("SELECT COUNT(*) AS c FROM tareas WHERE estado IN ('pendiente','en_progreso')");
+                        $pendientes = (int) $cntStmt->fetch()['c'];
+                    } catch (Exception $e) {}
+                    if ($pendientes > 0): ?>
+                        <span class="nav-badge"><?= $pendientes > 99 ? '99+' : $pendientes ?></span>
+                    <?php endif; ?>
+                </a>
                 <a href="/helpdesk/reportes.php" class="<?= basename($_SERVER['PHP_SELF']) === 'reportes.php' ? 'active' : '' ?>">Reportes</a>
             <?php endif; ?>
             <?php if ($_SESSION['rol'] === 'admin'): ?>
-                <a href="/helpdesk/crear_ticket.php" class="<?= basename($_SERVER['PHP_SELF']) === 'crear_ticket.php' ? 'active' : '' ?>">Nuevo Ticket</a>
+                <div class="nav-dropdown" id="adminDropdown">
+                    <button class="nav-dropdown-btn" id="adminDropdownBtn">Admin ▾</button>
+                    <div class="nav-dropdown-menu" id="adminDropdownMenu">
+                        <a href="/helpdesk/admin/usuarios.php" class="<?= basename($_SERVER['PHP_SELF']) === 'usuarios.php' || basename($_SERVER['PHP_SELF']) === 'usuario_editar.php' ? 'active' : '' ?>">Usuarios</a>
+                        <a href="/helpdesk/admin/categorias.php" class="<?= basename($_SERVER['PHP_SELF']) === 'categorias.php' ? 'active' : '' ?>">Categorias</a>
+                        <a href="/helpdesk/admin/etiquetas.php" class="<?= basename($_SERVER['PHP_SELF']) === 'etiquetas.php' ? 'active' : '' ?>">Etiquetas</a>
+                    </div>
+                </div>
             <?php endif; ?>
         </nav>
         <div class="header-actions">
+            <button class="theme-toggle" id="themeToggle" aria-label="Cambiar tema">
+                <svg id="themeIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+                </svg>
+            </button>
             <?php if (in_array($_SESSION['rol'], ['soporte', 'admin'], true)): ?>
                 <?php
                 require_once __DIR__ . '/../conexion.php';
@@ -89,10 +119,11 @@ if (session_status() === PHP_SESSION_NONE) {
                     </div>
                 </div>
             <?php endif; ?>
-            <span class="user-name"><?= htmlspecialchars($_SESSION['nombre'] ?? '') ?></span>
+            <a href="/helpdesk/perfil.php" class="user-name"><?= htmlspecialchars($_SESSION['nombre'] ?? '') ?></a>
             <a href="/helpdesk/logout.php" class="btn btn-outline btn-sm">Salir</a>
         </div>
     </div>
 </header>
 <?php endif; ?>
+<div class="toast-container" id="toastContainer"></div>
 <main class="page-wrapper">

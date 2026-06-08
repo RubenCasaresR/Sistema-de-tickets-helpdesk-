@@ -1,7 +1,9 @@
 <?php
 require_once __DIR__ . '/includes/auth_check.php';
 require_once __DIR__ . '/conexion.php';
-require_once __DIR__ . '/vendor/autoload.php';
+if (file_exists(__DIR__ . '/vendor/autoload.php')) {
+    require_once __DIR__ . '/vendor/autoload.php';
+}
 requiereRol(['soporte', 'admin']);
 
 $pdo = obtenerConexion();
@@ -203,3 +205,4 @@ $mpdf->SetTitle('Reporte de Tickets - HelpDesk');
 $mpdf->SetAuthor('HelpDesk System');
 $mpdf->WriteHTML($html);
 $mpdf->Output('reporte_tickets.pdf', 'I');
+

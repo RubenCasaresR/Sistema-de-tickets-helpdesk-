@@ -1,7 +1,7 @@
 <?php
 session_start();
 
-// Si ya está logueado, redirigir según rol
+// Si ya esta logueado, redirigir segun rol
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
     redirigirPorRol($_SESSION['rol'] ?? '');
     exit;
@@ -38,10 +38,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 exit;
             }
 
-            $error = 'Credenciales inválidas. Verifica tu email y contraseña.';
+            $error = 'Credenciales invalidas. Verifica tu email y contrasena.';
         } catch (PDOException $e) {
             error_log('Error en login: ' . $e->getMessage());
-            $error = 'Error interno del servidor. Intente más tarde.';
+            $error = 'Error interno del servidor. Intente mas tarde.';
         }
     }
 }
@@ -54,13 +54,14 @@ function redirigirPorRol(string $rol): void
         header('Location: /helpdesk/panel_admin.php');
     }
 }
+$page_title = 'Iniciar Sesion';
 ?>
 <?php require_once __DIR__ . '/includes/header.php'; ?>
 
 <div class="auth-page">
     <div class="auth-card">
         <h1>HelpDesk</h1>
-        <p class="auth-subtitle">Inicia sesión para continuar</p>
+        <p class="auth-subtitle">Inicia sesion para continuar</p>
 
         <?php if ($error !== ''): ?>
             <div class="alert alert-danger"><?= htmlspecialchars($error) ?></div>
@@ -68,20 +69,24 @@ function redirigirPorRol(string $rol): void
 
         <form method="post" action="">
             <div class="form-group">
-                <label for="email">Correo electrónico</label>
+                <label for="email">Correo electronico</label>
                 <input type="email" id="email" name="email" class="form-control" placeholder="tu@correo.com" required autocomplete="email">
             </div>
             <div class="form-group">
-                <label for="password">Contraseña</label>
+                <label for="password">Contrasena</label>
                 <input type="password" id="password" name="password" class="form-control" placeholder="••••••••" required autocomplete="current-password">
             </div>
-            <button type="submit" class="btn btn-primary btn-block">Iniciar Sesión</button>
+            <button type="submit" class="btn btn-primary btn-block">Iniciar Sesion</button>
         </form>
 
         <div class="auth-links">
-            ¿No tienes cuenta? <a href="/helpdesk/register.php">Regístrate aquí</a>
+            <a href="/helpdesk/recuperar.php">¿Olvidaste tu contrasena?</a>
+        </div>
+        <div class="auth-links">
+            ¿No tienes cuenta? <a href="/helpdesk/register.php">Registrate aqui</a>
         </div>
     </div>
 </div>
 
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
+
