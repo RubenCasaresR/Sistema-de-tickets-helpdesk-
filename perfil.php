@@ -14,7 +14,7 @@ $stmt->execute([':id' => $usuario_id]);
 $usuario = $stmt->fetch();
 
 if (!$usuario) {
-    header('Location: /helpdesk/logout.php');
+    redirect('logout.php');
     exit;
 }
 

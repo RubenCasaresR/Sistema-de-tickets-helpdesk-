@@ -6,7 +6,7 @@ requiereAutenticacion();
 
 $is_staff = in_array($_SESSION['rol'], ['soporte', 'admin'], true);
 if (!$is_staff) {
-    header('Location: /helpdesk/index.php');
+    redirect('index.php');
     exit;
 }
 
@@ -16,13 +16,13 @@ $success = '';
 
 $id = (int) ($_GET['id'] ?? 0);
 if ($id <= 0) {
-    header('Location: /helpdesk/tareas.php');
+    redirect('tareas.php');
     exit;
 }
 
 $tarea = obtenerTarea($pdo, $id);
 if (!$tarea) {
-    header('Location: /helpdesk/tareas.php');
+    redirect('tareas.php');
     exit;
 }
 
@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         $ins->execute([':tarea_id' => $id, ':usuario_id' => $_SESSION['usuario_id'], ':mensaje' => $mensaje]);
         registrarHistorial($pdo, $id, $_SESSION['usuario_id'], 'comentario', 'Agrego un comentario');
         $_SESSION['success_message'] = 'Comentario agregado.';
-        header('Location: /helpdesk/tarea_ver.php?id=' . $id);
+        redirect('tarea_ver.php?id=' . $id);
         exit;
     }
 }
@@ -69,7 +69,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         $ins = $pdo->prepare('INSERT INTO tarea_subtareas (tarea_id, texto, orden) VALUES (:tarea_id, :texto, :orden)');
         $ins->execute([':tarea_id' => $id, ':texto' => $texto, ':orden' => $orden]);
     }
-    header('Location: /helpdesk/tarea_ver.php?id=' . $id);
+    redirect('tarea_ver.php?id=' . $id);
     exit;
 }
 
@@ -94,7 +94,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
 
         $_SESSION['success_message'] = 'Estado actualizado.';
     }
-    header('Location: /helpdesk/tarea_ver.php?id=' . $id);
+    redirect('tarea_ver.php?id=' . $id);
     exit;
 }
 
@@ -122,7 +122,7 @@ $page_title = ($tarea['titulo'] ?? 'Tarea');
 <?php require_once __DIR__ . '/includes/header.php'; ?>
 
 <div class="page-header">
-    <a href="/helpdesk/tareas.php" class="btn btn-outline btn-sm mb-4">&larr; Volver a Tareas</a>
+    <a href="<?= url('tareas.php') ?>" class="btn btn-outline btn-sm mb-4">&larr; Volver a Tareas</a>
     <h1><?= htmlspecialchars($tarea['titulo']) ?></h1>
 </div>
 
@@ -245,7 +245,7 @@ $page_title = ($tarea['titulo'] ?? 'Tarea');
                 <div class="time-tracker-actions mb-4">
                     <?php if ($timerActivo): ?>
                         <?php $inicio = strtotime($timerActivo['fecha_inicio']); $transcurrido = time() - $inicio; ?>
-                        <form method="post" action="/helpdesk/ajax_tarea_tiempo.php" class="timer-form" data-tarea-id="<?= $id ?>">
+                        <form method="post" action="<?= url('ajax_tarea_tiempo.php') ?>" class="timer-form" data-tarea-id="<?= $id ?>">
                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
                             <input type="hidden" name="accion" value="detener">
                             <input type="hidden" name="tarea_id" value="<?= $id ?>">
@@ -260,7 +260,7 @@ $page_title = ($tarea['titulo'] ?? 'Tarea');
                             </div>
                         </form>
                     <?php else: ?>
-                        <form method="post" action="/helpdesk/ajax_tarea_tiempo.php" class="timer-form" data-tarea-id="<?= $id ?>">
+                        <form method="post" action="<?= url('ajax_tarea_tiempo.php') ?>" class="timer-form" data-tarea-id="<?= $id ?>">
                             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
                             <input type="hidden" name="accion" value="iniciar">
                             <input type="hidden" name="tarea_id" value="<?= $id ?>">
@@ -342,8 +342,8 @@ $page_title = ($tarea['titulo'] ?? 'Tarea');
                 <button type="submit" class="btn btn-primary btn-block btn-sm">Cambiar Estado</button>
             </form>
             <div class="side-panel-actions">
-                <a href="/helpdesk/tarea_form.php?id=<?= $id ?>" class="btn btn-outline btn-block btn-sm">Editar Tarea</a>
-                <form method="post" action="/helpdesk/tareas.php" onsubmit="return confirm('¿Eliminar esta tarea?')">
+                <a href="<?= url('tarea_form.php?id=' . $id) ?>" class="btn btn-outline btn-block btn-sm">Editar Tarea</a>
+                <form method="post" action="<?= url('tareas.php') ?>" onsubmit="return confirm('¿Eliminar esta tarea?')">
                     <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
                     <input type="hidden" name="accion" value="eliminar_tarea">
                     <input type="hidden" name="tarea_id" value="<?= $id ?>">
@@ -384,7 +384,7 @@ $page_title = ($tarea['titulo'] ?? 'Tarea');
             <div class="info-row">
                 <span class="label">Ticket</span>
                 <span class="value">
-                    <a href="/helpdesk/ver_ticket.php?id=<?= (int) $tarea['ticket_id'] ?>" title="<?= htmlspecialchars($tarea['ticket_folio']) ?>"><?= htmlspecialchars(mb_substr($tarea['ticket_titulo'] ?? $tarea['ticket_folio'], 0, 60)) ?></a>
+                    <a href="<?= url('ver_ticket.php?id=' . (int) $tarea['ticket_id']) ?>" title="<?= htmlspecialchars($tarea['ticket_folio']) ?>"><?= htmlspecialchars(mb_substr($tarea['ticket_titulo'] ?? $tarea['ticket_folio'], 0, 60)) ?></a>
                 </span>
             </div>
             <?php endif; ?>

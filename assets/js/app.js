@@ -327,7 +327,7 @@
                         if (!board) return;
                         var csrfToken = board.getAttribute('data-csrf-token');
 
-                        fetch('/helpdesk/ajax_actualizar_estado.php', {
+                        fetch(window.BASE_URL + '/ajax_actualizar_estado.php', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -508,7 +508,7 @@
 
     function updateChartEstado() {
         if (!chartEstadoInstance) return;
-        fetch('/helpdesk/ajax_estadisticas.php')
+        fetch(window.BASE_URL + '/ajax_estadisticas.php')
             .then(function (r) { return r.json(); })
             .then(function (data) {
                 if (data && data.estado) {
@@ -556,7 +556,11 @@
                         if (fromBadge) fromBadge.textContent = parseInt(fromBadge.textContent) - 1;
                         if (toBadge) toBadge.textContent = parseInt(toBadge.textContent) + 1;
 
-                        fetch('/helpdesk/ajax_tarea_estado.php', {
+                        // Keep reference for revert
+                        var originalContainer = evt.from;
+                        var card = evt.item;
+
+                        fetch(window.BASE_URL + '/ajax_tarea_estado.php', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -568,13 +572,19 @@
                         .then(function (r) { return r.json(); })
                         .then(function (data) {
                             if (!data.success) {
-                                showToast('Error al mover la tarea.', 'error');
-                                location.reload();
+                                // Revert: move card back to original column
+                                originalContainer.appendChild(card);
+                                if (fromBadge) fromBadge.textContent = parseInt(fromBadge.textContent) + 1;
+                                if (toBadge) toBadge.textContent = parseInt(toBadge.textContent) - 1;
+                                showToast(data.error || 'Error al mover la tarea.', 'error');
                             }
                         })
                         .catch(function () {
+                            // Revert on network error too
+                            originalContainer.appendChild(card);
+                            if (fromBadge) fromBadge.textContent = parseInt(fromBadge.textContent) + 1;
+                            if (toBadge) toBadge.textContent = parseInt(toBadge.textContent) - 1;
                             showToast('Error de conexion al mover la tarea.', 'error');
-                            location.reload();
                         });
                     }
                 }
@@ -598,7 +608,7 @@
             formData.append('accion', 'toggle');
             formData.append('subtarea_id', subtareaId);
 
-            fetch('/helpdesk/ajax_tarea_subtarea.php', {
+            fetch(window.BASE_URL + '/ajax_tarea_subtarea.php', {
                 method: 'POST',
                 body: formData
             })
@@ -648,7 +658,7 @@
             formData.append('accion', 'eliminar');
             formData.append('subtarea_id', subtareaId);
 
-            fetch('/helpdesk/ajax_tarea_subtarea.php', {
+            fetch(window.BASE_URL + '/ajax_tarea_subtarea.php', {
                 method: 'POST',
                 body: formData
             })
@@ -660,6 +670,41 @@
             })
             .catch(function () {
                 showToast('Error al eliminar subtarea.', 'error');
+            });
+        }
+    });
+
+    // ---------- File deletion (event delegation) ----------
+    document.addEventListener('click', function (e) {
+        var btn = e.target;
+        if (btn && btn.classList.contains('file-delete-btn')) {
+            e.preventDefault();
+            var fileId = btn.getAttribute('data-file-id');
+            var filename = btn.getAttribute('data-filename');
+            if (!fileId) return;
+
+            if (!confirm('¿Eliminar "' + filename + '" permanentemente?')) return;
+
+            var csrfMeta = document.querySelector('meta[name="csrf-token"]');
+            var csrfToken = csrfMeta ? csrfMeta.getAttribute('content') : '';
+
+            fetch(window.BASE_URL + '/eliminar_archivo.php', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: fileId, csrf_token: csrfToken })
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    var wrapper = btn.closest('.file-gallery-item-wrapper');
+                    if (wrapper) wrapper.remove();
+                    showToast('Archivo eliminado.', 'success');
+                } else {
+                    showToast(data.error || 'Error al eliminar el archivo.', 'error');
+                }
+            })
+            .catch(function () {
+                showToast('Error de conexion al eliminar el archivo.', 'error');
             });
         }
     });

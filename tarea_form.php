@@ -6,7 +6,7 @@ requiereAutenticacion();
 
 $is_staff = in_array($_SESSION['rol'], ['soporte', 'admin'], true);
 if (!$is_staff) {
-    header('Location: /helpdesk/index.php');
+    redirect('index.php');
     exit;
 }
 
@@ -30,7 +30,7 @@ $id = (int) ($_GET['id'] ?? 0);
 if ($id > 0) {
     $tareaDB = obtenerTarea($pdo, $id);
     if (!$tareaDB) {
-        header('Location: /helpdesk/tareas.php');
+        redirect('tareas.php');
         exit;
     }
     $tarea = $tareaDB;
@@ -134,7 +134,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $_SESSION['success_message'] = $editar ? 'Tarea actualizada correctamente.' : 'Tarea creada correctamente.';
-            header('Location: /helpdesk/tarea_ver.php?id=' . $tarea_id);
+            redirect('tarea_ver.php?id=' . $tarea_id);
             exit;
         } catch (PDOException $e) {
             $pdo->rollBack();
@@ -150,7 +150,7 @@ $page_title = isset($tarea) ? 'Editar Tarea' : 'Nueva Tarea';
 <?php require_once __DIR__ . '/includes/header.php'; ?>
 
 <div class="page-header">
-    <a href="/helpdesk/tareas.php" class="btn btn-outline btn-sm mb-4">&larr; Volver a Tareas</a>
+    <a href="<?= url('tareas.php') ?>" class="btn btn-outline btn-sm mb-4">&larr; Volver a Tareas</a>
     <h1><?= $editar ? 'Editar Tarea' : 'Nueva Tarea' ?></h1>
 </div>
 
@@ -258,7 +258,7 @@ $page_title = isset($tarea) ? 'Editar Tarea' : 'Nueva Tarea';
                 <button type="submit" class="btn btn-primary">
                     <?= $editar ? 'Guardar Cambios' : 'Crear Tarea' ?>
                 </button>
-                <a href="/helpdesk/tareas.php" class="btn btn-outline">Cancelar</a>
+                <a href="<?= url('tareas.php') ?>" class="btn btn-outline">Cancelar</a>
             </div>
         </form>
     </div>

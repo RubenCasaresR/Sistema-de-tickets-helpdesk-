@@ -2,7 +2,7 @@
 session_start();
 
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header('Location: /helpdesk/index.php');
+    header('Location: ' . url('index.php'));
     exit;
 }
 
@@ -93,7 +93,7 @@ $csrf_token = generarTokenCSRF();
         <?php endif; ?>
 
         <div class="auth-links">
-            <a href="/helpdesk/login.php">Volver al inicio de sesion</a>
+            <a href="<?= url('login.php') ?>">Volver al inicio de sesion</a>
         </div>
     </div>
 </div>

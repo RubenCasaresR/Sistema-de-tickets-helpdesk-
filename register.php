@@ -3,9 +3,9 @@ session_start();
 
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
     if ($_SESSION['rol'] === 'cliente') {
-        header('Location: /helpdesk/mis_tickets.php');
+        header('Location: ' . url('mis_tickets.php'));
     } else {
-        header('Location: /helpdesk/panel_admin.php');
+        header('Location: ' . url('panel_admin.php'));
     }
     exit;
 }
@@ -46,7 +46,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $error = 'El correo ya esta registrado.';
                 } else {
                     $hash = password_hash($password, PASSWORD_DEFAULT);
-                    $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, password, rol) VALUES (:nombre, :email, :password, :rol)');
+                    $stmt = $pdo->prepare('INSERT INTO usuarios (nombre, email, password, rol, activo) VALUES (:nombre, :email, :password, :rol, 0)');
                     $stmt->execute([
                         ':nombre'   => $nombre,
                         ':email'    => $email,
@@ -54,7 +54,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':rol'      => 'cliente',
                     ]);
 
-                    $success = 'Cuenta creada exitosamente. Ahora puedes iniciar sesion.';
+                    $success = 'Cuenta creada exitosamente. Ahora un administrador debe aprobar tu registro antes de que puedas iniciar sesion.';
                     $nombre  = '';
                     $email   = '';
                 }
@@ -104,7 +104,7 @@ $page_title = 'Registro';
         </form>
 
         <div class="auth-links">
-            ¿Ya tienes cuenta? <a href="/helpdesk/login.php">Inicia sesion</a>
+            ¿Ya tienes cuenta? <a href="<?= url('login.php') ?>">Inicia sesion</a>
         </div>
     </div>
 </div>

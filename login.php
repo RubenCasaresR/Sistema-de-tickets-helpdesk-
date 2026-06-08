@@ -21,24 +21,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     } else {
         try {
             $pdo  = obtenerConexion();
-            $stmt = $pdo->prepare('SELECT id, nombre, email, password, rol FROM usuarios WHERE email = :email LIMIT 1');
+            $stmt = $pdo->prepare('SELECT id, nombre, email, password, rol, activo FROM usuarios WHERE email = :email LIMIT 1');
             $stmt->execute([':email' => $email]);
             $usuario = $stmt->fetch();
 
             if ($usuario && password_verify($password, $usuario['password'])) {
-                session_regenerate_id(true);
+                if (empty($usuario['activo'])) {
+                    $error = 'Tu cuenta esta pendiente de aprobacion por un administrador.';
+                } else {
+                    session_regenerate_id(true);
 
-                $_SESSION['logged_in']  = true;
-                $_SESSION['usuario_id'] = (int) $usuario['id'];
-                $_SESSION['nombre']     = $usuario['nombre'];
-                $_SESSION['email']      = $usuario['email'];
-                $_SESSION['rol']        = $usuario['rol'];
+                    $_SESSION['logged_in']  = true;
+                    $_SESSION['usuario_id'] = (int) $usuario['id'];
+                    $_SESSION['nombre']     = $usuario['nombre'];
+                    $_SESSION['email']      = $usuario['email'];
+                    $_SESSION['rol']        = $usuario['rol'];
 
-                redirigirPorRol($usuario['rol']);
-                exit;
+                    redirigirPorRol($usuario['rol']);
+                    exit;
+                }
+            } else {
+                $error = 'Credenciales invalidas. Verifica tu email y contrasena.';
             }
-
-            $error = 'Credenciales invalidas. Verifica tu email y contrasena.';
         } catch (PDOException $e) {
             error_log('Error en login: ' . $e->getMessage());
             $error = 'Error interno del servidor. Intente mas tarde.';
@@ -49,9 +53,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 function redirigirPorRol(string $rol): void
 {
     if ($rol === 'cliente') {
-        header('Location: /helpdesk/mis_tickets.php');
+        header('Location: ' . url('mis_tickets.php'));
     } else {
-        header('Location: /helpdesk/panel_admin.php');
+        header('Location: ' . url('panel_admin.php'));
     }
 }
 $page_title = 'Iniciar Sesion';
@@ -80,10 +84,10 @@ $page_title = 'Iniciar Sesion';
         </form>
 
         <div class="auth-links">
-            <a href="/helpdesk/recuperar.php">¿Olvidaste tu contrasena?</a>
+            <a href="<?= url('recuperar.php') ?>">¿Olvidaste tu contrasena?</a>
         </div>
         <div class="auth-links">
-            ¿No tienes cuenta? <a href="/helpdesk/register.php">Registrate aqui</a>
+            ¿No tienes cuenta? <a href="<?= url('register.php') ?>">Registrate aqui</a>
         </div>
     </div>
 </div>

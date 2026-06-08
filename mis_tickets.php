@@ -51,7 +51,7 @@ $page_title = 'Mis Tickets';
         <h1>Mis Tickets</h1>
         <p>Estos son todos los tickets que has creado.</p>
     </div>
-    <a href="/helpdesk/crear_ticket.php" class="btn btn-primary">+ Nuevo Ticket</a>
+    <a href="<?= url('crear_ticket.php') ?>" class="btn btn-primary">+ Nuevo Ticket</a>
 </div>
 
 <?php if ($success !== ''): ?>
@@ -63,7 +63,7 @@ $page_title = 'Mis Tickets';
         <div class="card-body">
             <div class="text-center" style="padding:48px 24px">
                 <p class="text-muted">No has creado ningun ticket todavia.</p>
-                <a href="/helpdesk/crear_ticket.php" class="btn btn-primary mt-4">Crear mi primer ticket</a>
+                <a href="<?= url('crear_ticket.php') ?>" class="btn btn-primary mt-4">Crear mi primer ticket</a>
             </div>
         </div>
     </div>
@@ -91,7 +91,7 @@ $page_title = 'Mis Tickets';
                     </div>
                 </div>
                 <div class="ticket-card-footer">
-                    <a href="/helpdesk/ver_ticket.php?id=<?= (int) $ticket['id'] ?>" class="btn btn-outline btn-sm">Ver detalle</a>
+                    <a href="<?= url('ver_ticket.php?id=' . (int) $ticket['id']) ?>" class="btn btn-outline btn-sm">Ver detalle</a>
                 </div>
             </div>
         <?php endforeach; ?>

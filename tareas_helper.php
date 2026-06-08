@@ -3,7 +3,7 @@
  * Helper functions for the Task Manager module
  */
 
-function obtenerTareas(PDO $pdo, array $filtros = []): array {
+function obtenerTareas(PDO $pdo, array $filtros = [], ?int $limite = null, int $offset = 0): array {
     $sql = 'SELECT t.*, c.nombre AS creador_nombre, a.nombre AS asignado_nombre,
                    tk.folio AS ticket_folio, tk.titulo AS ticket_titulo
             FROM tareas t
@@ -49,9 +49,56 @@ function obtenerTareas(PDO $pdo, array $filtros = []): array {
 
     $sql .= ' ORDER BY t.fecha_creacion DESC';
 
+    if ($limite !== null) {
+        $sql .= ' LIMIT ' . (int) $limite . ' OFFSET ' . (int) $offset;
+    }
+
     $stmt = $pdo->prepare($sql);
     $stmt->execute($params);
     return $stmt->fetchAll();
+}
+
+function contarTareas(PDO $pdo, array $filtros = []): int {
+    $sql = 'SELECT COUNT(*) FROM tareas t WHERE 1=1';
+    $params = [];
+
+    if (!empty($filtros['estado'])) {
+        $sql .= ' AND t.estado = :estado';
+        $params[':estado'] = $filtros['estado'];
+    }
+    if (!empty($filtros['prioridad'])) {
+        $sql .= ' AND t.prioridad = :prioridad';
+        $params[':prioridad'] = $filtros['prioridad'];
+    }
+    if (!empty($filtros['asignado_id'])) {
+        $sql .= ' AND t.asignado_id = :asignado_id';
+        $params[':asignado_id'] = (int) $filtros['asignado_id'];
+    }
+    if (!empty($filtros['creador_id'])) {
+        $sql .= ' AND t.creador_id = :creador_id';
+        $params[':creador_id'] = (int) $filtros['creador_id'];
+    }
+    if (!empty($filtros['busqueda'])) {
+        $sql .= ' AND (t.titulo LIKE :busqueda OR t.descripcion LIKE :busqueda2)';
+        $params[':busqueda'] = '%' . $filtros['busqueda'] . '%';
+        $params[':busqueda2'] = '%' . $filtros['busqueda'] . '%';
+    }
+    if (!empty($filtros['etiqueta_id'])) {
+        $sql .= ' AND t.id IN (SELECT tarea_id FROM tarea_etiquetas WHERE etiqueta_id = :etiqueta_id)';
+        $params[':etiqueta_id'] = (int) $filtros['etiqueta_id'];
+    }
+    if (!empty($filtros['fecha_desde'])) {
+        $sql .= ' AND t.fecha_limite >= :fecha_desde';
+        $params[':fecha_desde'] = $filtros['fecha_desde'];
+    }
+    if (!empty($filtros['fecha_hasta'])) {
+        $sql .= ' AND t.fecha_limite <= :fecha_hasta';
+        $params[':fecha_hasta'] = $filtros['fecha_hasta'];
+    }
+
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute($params);
+    return (int) $stmt->fetchColumn();
 }
 
 function obtenerTarea(PDO $pdo, int $id): ?array {
@@ -244,6 +291,9 @@ function sincronizarEstadoTicketDesdeTarea(PDO $pdo, int $ticket_id, int $usuari
             break;
         case 'pendiente':
             $estado_ticket = 'abierto';
+            break;
+        case 'completada':
+            $estado_ticket = 'resuelto';
             break;
     }
     if ($estado_ticket === null) return;

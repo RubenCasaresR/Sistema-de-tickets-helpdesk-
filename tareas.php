@@ -6,7 +6,7 @@ requiereAutenticacion();
 
 $is_staff = in_array($_SESSION['rol'], ['soporte', 'admin'], true);
 if (!$is_staff) {
-    header('Location: /helpdesk/index.php');
+    redirect('index.php');
     exit;
 }
 
@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']) && $_POST['
         $pdo->prepare('DELETE FROM tareas WHERE id = :id')->execute([':id' => $tarea_id]);
         $_SESSION['success_message'] = 'Tarea eliminada.';
     }
-    header('Location: /helpdesk/tareas.php');
+    redirect('tareas.php');
     exit;
 }
 
@@ -40,7 +40,7 @@ $csrf_token = generarTokenCSRF();
 // View mode (cookie-based for persistence)
 $vista = $_GET['vista'] ?? ($_COOKIE['tareas_vista'] ?? 'kanban');
 if (!in_array($vista, ['kanban', 'tabla', 'calendario'])) $vista = 'kanban';
-setcookie('tareas_vista', $vista, time() + 86400 * 30, '/helpdesk/');
+setcookie('tareas_vista', $vista, time() + 86400 * 30, BASE_URL . '/');
 
 // Filters
 $filtros = [];
@@ -87,10 +87,25 @@ if ($vista === 'kanban') {
     $etiquetasPorTarea = obtenerEtiquetasParaTareas($pdo, $all_ids);
 }
 
-// Get flat list for tabla view
+// Get flat list for tabla view (with pagination)
 $tareasLista = [];
+$totalTareas = 0;
+$totalPaginas = 1;
+$pagina = 1;
 if ($vista === 'tabla') {
-    $tareasLista = obtenerTareas($pdo, $filtros);
+    $porPagina = 20;
+    $pagina = max(1, (int) ($_GET['p'] ?? 1));
+    $offset = ($pagina - 1) * $porPagina;
+
+    $totalTareas = contarTareas($pdo, $filtros);
+    $totalPaginas = max(1, (int) ceil($totalTareas / $porPagina));
+
+    if ($pagina > $totalPaginas) {
+        $pagina = $totalPaginas;
+        $offset = ($pagina - 1) * $porPagina;
+    }
+
+    $tareasLista = obtenerTareas($pdo, $filtros, $porPagina, $offset);
     $all_ids = array_map(fn($t) => (int) $t['id'], $tareasLista);
     $etiquetasPorTarea = obtenerEtiquetasParaTareas($pdo, $all_ids);
 }
@@ -109,7 +124,7 @@ $page_title = 'Gestor de Tareas';
         <h1>Gestor de Tareas</h1>
         <p>Organiza y da seguimiento al trabajo del equipo</p>
     </div>
-    <a href="/helpdesk/tarea_form.php" class="btn btn-primary">+ Nueva Tarea</a>
+    <a href="<?= url('tarea_form.php') ?>" class="btn btn-primary">+ Nueva Tarea</a>
 </div>
 
 <?php if ($success !== ''): ?>
@@ -203,7 +218,7 @@ $page_title = 'Gestor de Tareas';
             <?php if ($filtro_busqueda || $filtro_estado || $filtro_prioridad || $filtro_asignado || $filtro_etiqueta): ?>
             <div>
                 <label class="text-small text-muted">&nbsp;</label>
-                <a href="/helpdesk/tareas.php?vista=<?= htmlspecialchars($vista) ?>" class="btn btn-outline btn-sm">Limpiar</a>
+                <a href="<?= url('tareas.php?vista=' . htmlspecialchars($vista)) ?>" class="btn btn-outline btn-sm">Limpiar</a>
             </div>
             <?php endif; ?>
         </form>
@@ -257,7 +272,7 @@ $page_title = 'Gestor de Tareas';
                             </span>
                         <?php endif; ?>
                     </div>
-                    <a href="/helpdesk/tarea_ver.php?id=<?= (int) $tar['id'] ?>" class="task-card-title">
+                    <a href="<?= url('tarea_ver.php?id=' . (int) $tar['id']) ?>" class="task-card-title">
                         <?= htmlspecialchars($tar['titulo']) ?>
                     </a>
                     <div class="task-card-meta">
@@ -307,7 +322,7 @@ $page_title = 'Gestor de Tareas';
                 <?php foreach ($tareasLista as $tar): ?>
                     <tr>
                         <td>
-                            <a href="/helpdesk/tarea_ver.php?id=<?= (int) $tar['id'] ?>" class="fw-600">
+                            <a href="<?= url('tarea_ver.php?id=' . (int) $tar['id']) ?>" class="fw-600">
                                 <?= htmlspecialchars($tar['titulo']) ?>
                             </a>
                         </td>
@@ -326,7 +341,7 @@ $page_title = 'Gestor de Tareas';
                         </td>
                         <td>
                             <?php if ($tar['ticket_folio']): ?>
-                                <a href="/helpdesk/ver_ticket.php?id=<?= (int) $tar['ticket_id'] ?>" class="text-small" title="<?= htmlspecialchars($tar['ticket_folio']) ?>"><?= htmlspecialchars(mb_substr($tar['ticket_titulo'] ?? $tar['ticket_folio'], 0, 60)) ?></a>
+                                <a href="<?= url('ver_ticket.php?id=' . (int) $tar['ticket_id']) ?>" class="text-small" title="<?= htmlspecialchars($tar['ticket_folio']) ?>"><?= htmlspecialchars(mb_substr($tar['ticket_titulo'] ?? $tar['ticket_folio'], 0, 60)) ?></a>
                             <?php else: ?>
                                 <span class="text-muted">—</span>
                             <?php endif; ?>
@@ -336,8 +351,8 @@ $page_title = 'Gestor de Tareas';
                         </td>
                         <td>
                             <div class="flex gap-2">
-                                <a href="/helpdesk/tarea_ver.php?id=<?= (int) $tar['id'] ?>" class="btn btn-outline btn-sm">Ver</a>
-                                <a href="/helpdesk/tarea_form.php?id=<?= (int) $tar['id'] ?>" class="btn btn-outline btn-sm">Editar</a>
+                                <a href="<?= url('tarea_ver.php?id=' . (int) $tar['id']) ?>" class="btn btn-outline btn-sm">Ver</a>
+                                <a href="<?= url('tarea_form.php?id=' . (int) $tar['id']) ?>" class="btn btn-outline btn-sm">Editar</a>
                             </div>
                         </td>
                     </tr>
@@ -345,6 +360,19 @@ $page_title = 'Gestor de Tareas';
             </tbody>
         </table>
     </div>
+    <?php if ($totalPaginas > 1): ?>
+    <div class="pagination">
+        <?php if ($pagina > 1): ?>
+            <a href="?vista=tabla&p=<?= $pagina - 1 ?><?= $queryStringView ? '&' . $queryStringView : '' ?>" class="btn btn-outline btn-sm">&laquo;</a>
+        <?php endif; ?>
+        <?php for ($i = 1; $i <= $totalPaginas; $i++): ?>
+            <a href="?vista=tabla&p=<?= $i ?><?= $queryStringView ? '&' . $queryStringView : '' ?>" class="btn btn-sm <?= $i === $pagina ? 'btn-primary' : 'btn-outline' ?>"><?= $i ?></a>
+        <?php endfor; ?>
+        <?php if ($pagina < $totalPaginas): ?>
+            <a href="?vista=tabla&p=<?= $pagina + 1 ?><?= $queryStringView ? '&' . $queryStringView : '' ?>" class="btn btn-outline btn-sm">&raquo;</a>
+        <?php endif; ?>
+    </div>
+    <?php endif; ?>
 </div>
 
 <?php else: ?>
@@ -393,7 +421,7 @@ foreach ($tareasCalendario as $tc) {
                     <span class="calendar-day-num"><?= $dia ?></span>
                     <div class="calendar-day-tasks">
                         <?php foreach (array_slice($tareas_dia, 0, 3) as $tc): ?>
-                            <a href="/helpdesk/tarea_ver.php?id=<?= (int) $tc['id'] ?>"
+                            <a href="<?= url('tarea_ver.php?id=' . (int) $tc['id']) ?>"
                                class="cal-task-link"
                                style="border-left-color:<?= $tc['prioridad'] === 'urgente' ? '#dc2626' : ($tc['prioridad'] === 'alta' ? '#fab1a0' : '#6366f1') ?>"
                                title="<?= htmlspecialchars($tc['titulo']) ?>">

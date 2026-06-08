@@ -15,7 +15,7 @@ $csrf_token = $_POST['csrf_token'] ?? '';
 
 if (!validarTokenCSRF($csrf_token)) {
     $_SESSION['error_message'] = 'Token invalido.';
-    header('Location: /helpdesk/tarea_ver.php?id=' . ((int) ($_POST['tarea_id'] ?? 0)));
+    redirect('tarea_ver.php?id=' . ((int) ($_POST['tarea_id'] ?? 0)));
     exit;
 }
 
@@ -24,7 +24,7 @@ $accion = $_POST['accion'] ?? '';
 $usuario_id = $_SESSION['usuario_id'];
 
 if ($tarea_id <= 0) {
-    header('Location: /helpdesk/tareas.php');
+    redirect('tareas.php');
     exit;
 }
 
@@ -61,5 +61,5 @@ try {
     $_SESSION['error_message'] = 'Error con el timer.';
 }
 
-header('Location: /helpdesk/tarea_ver.php?id=' . $tarea_id);
+redirect('tarea_ver.php?id=' . $tarea_id);
 exit;

@@ -2,7 +2,7 @@
 session_start();
 
 if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true) {
-    header('Location: /helpdesk/index.php');
+    header('Location: ' . url('index.php'));
     exit;
 }
 
@@ -40,7 +40,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                     if (file_exists(__DIR__ . '/helpers/mailer.php')) {
                         require_once __DIR__ . '/helpers/mailer.php';
-                        $enlace = MAIL_BASE_URL . '/helpdesk/restablecer.php?token=' . $token;
+                        $enlace = rtrim(MAIL_BASE_URL, '/') . url('restablecer.php?token=' . $token);
                         $asunto = 'Restablecer tu contrasena - HelpDesk';
                         $cuerpo = '
                             <h2>Restablecer Contrasena</h2>
@@ -93,7 +93,7 @@ $csrf_token = generarTokenCSRF();
         </form>
 
         <div class="auth-links">
-            <a href="/helpdesk/login.php">Volver al inicio de sesion</a>
+            <a href="<?= url('login.php') ?>">Volver al inicio de sesion</a>
         </div>
     </div>
 </div>

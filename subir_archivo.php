@@ -162,7 +162,7 @@ try {
             'nombre_archivo'  => $nombre_archivo,
             'tipo'            => $detected_mime,
             'tamano'          => $archivo['size'],
-            'url'             => '/helpdesk/descargar_archivo.php?id=' . $file_id,
+'url' => url('descargar_archivo.php?id=' . $file_id),
         ]
     ]);
 } catch (PDOException $e) {

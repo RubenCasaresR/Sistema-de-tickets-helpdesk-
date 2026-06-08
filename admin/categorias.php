@@ -29,7 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $pdo->prepare('INSERT INTO categorias (nombre) VALUES (:nombre)')->execute([':nombre' => $nombre]);
             $_SESSION['success_message'] = 'Categoria creada.';
         }
-        header('Location: /helpdesk/admin/categorias.php');
+        redirect('admin/categorias.php');
         exit;
     } elseif ($_POST['accion'] === 'toggle_activo') {
         $id = (int) ($_POST['id'] ?? 0);
@@ -37,7 +37,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $pdo->prepare('UPDATE categorias SET activo = NOT activo WHERE id = :id')->execute([':id' => $id]);
             $_SESSION['success_message'] = 'Estado cambiado.';
         }
-        header('Location: /helpdesk/admin/categorias.php');
+        redirect('admin/categorias.php');
         exit;
     } elseif ($_POST['accion'] === 'eliminar') {
         $id = (int) ($_POST['id'] ?? 0);
@@ -45,7 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $pdo->prepare('DELETE FROM categorias WHERE id = :id')->execute([':id' => $id]);
             $_SESSION['success_message'] = 'Categoria eliminada.';
         }
-        header('Location: /helpdesk/admin/categorias.php');
+        redirect('admin/categorias.php');
         exit;
     }
 }

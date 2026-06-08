@@ -84,7 +84,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
 
             $_SESSION['success_message'] = 'Ticket creado exitosamente. Folio: ' . $folio;
-            header('Location: /helpdesk/mis_tickets.php');
+            redirect('mis_tickets.php');
             exit;
         } catch (PDOException $e) {
             $pdo->rollBack();
@@ -215,7 +215,7 @@ Asignacion
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:middle"><path d="M20 6L9 17l-5-5"/></svg>
                     Crear Ticket
                 </button>
-                <a href="/helpdesk/mis_tickets.php" class="btn btn-outline">
+                <a href="<?= url('mis_tickets.php') ?>" class="btn btn-outline">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:6px;vertical-align:middle"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     Cancelar
                 </a>

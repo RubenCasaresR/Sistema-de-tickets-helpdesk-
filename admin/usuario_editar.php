@@ -19,7 +19,7 @@ if (!$es_nuevo) {
     $stmt->execute([':id' => $editar_id]);
     $usuario = $stmt->fetch();
     if (!$usuario) {
-        header('Location: /helpdesk/admin/usuarios.php');
+        redirect('admin/usuarios.php');
         exit;
     }
     $nombre = $usuario['nombre'];
@@ -72,7 +72,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         }
                         $_SESSION['success_message'] = 'Usuario actualizado correctamente.';
                     }
-                    header('Location: /helpdesk/admin/usuarios.php');
+                    redirect('admin/usuarios.php');
                     exit;
                 } catch (PDOException $e) {
                     error_log('Error al guardar usuario: ' . $e->getMessage());
@@ -130,7 +130,7 @@ $csrf_token = generarTokenCSRF();
 
             <div class="flex gap-4" style="margin-top:24px">
                 <button type="submit" class="btn btn-primary"><?= $es_nuevo ? 'Crear Usuario' : 'Guardar Cambios' ?></button>
-                <a href="/helpdesk/admin/usuarios.php" class="btn btn-outline">Cancelar</a>
+                <a href="<?= url('admin/usuarios.php') ?>" class="btn btn-outline">Cancelar</a>
             </div>
         </form>
     </div>

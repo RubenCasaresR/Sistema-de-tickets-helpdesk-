@@ -7,8 +7,8 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-<script src="/helpdesk/assets/js/upload.js"></script>
-<script src="/helpdesk/assets/js/app.js"></script>
+<script src="<?= url('assets/js/upload.js') ?>"></script>
+<script src="<?= url('assets/js/app.js') ?>"></script>
 </body>
 </html>
 

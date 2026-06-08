@@ -7,7 +7,7 @@ $pdo = obtenerConexion();
 
 $ticket_id = (int) ($_GET['id'] ?? 0);
 if ($ticket_id <= 0) {
-    header('Location: /helpdesk/panel_admin.php');
+    redirect('panel_admin.php');
     exit;
 }
 
@@ -16,7 +16,7 @@ $stmt->execute([':id' => $ticket_id]);
 $ticket = $stmt->fetch();
 
 if (!$ticket) {
-    header('Location: /helpdesk/panel_admin.php');
+    redirect('panel_admin.php');
     exit;
 }
 
@@ -59,7 +59,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             ]);
 
             $_SESSION['success_message'] = 'Ticket actualizado correctamente.';
-            header('Location: /helpdesk/ver_ticket.php?id=' . $ticket_id);
+            redirect('ver_ticket.php?id=' . $ticket_id);
             exit;
         } catch (PDOException $e) {
             error_log('Error al editar ticket: ' . $e->getMessage());
@@ -120,7 +120,7 @@ $page_title = 'Editar ' . ($ticket['folio'] ?? '');
 
             <div class="flex gap-4">
                 <button type="submit" class="btn btn-primary">Guardar Cambios</button>
-                <a href="/helpdesk/ver_ticket.php?id=<?= $ticket_id ?>" class="btn btn-outline">Cancelar</a>
+                <a href="<?= url('ver_ticket.php?id=' . $ticket_id) ?>" class="btn btn-outline">Cancelar</a>
             </div>
         </form>
     </div>

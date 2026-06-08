@@ -1,5 +1,6 @@
 <?php
 
+require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/includes/config.php';
 define('DB_CHARSET', 'utf8mb4');
 
@@ -83,15 +84,28 @@ function registrarHistorialTicket(PDO $pdo, int $ticket_id, int $usuario_id, str
         ':detalle'    => $detalle,
     ]);
 }
-// ?? HTML sanitizer ??
+// ── HTML sanitizer (HTMLPurifier) ──
 
 function sanitizarDescripcion(string $html, string $extraTags = ''): string {
-    $baseTags = '<p><br><strong><em><u><s><ul><ol><li><blockquote><pre><code><a>';
-    $allowed = $extraTags !== '' ? $baseTags . $extraTags : $baseTags;
-    $html = strip_tags($html, $allowed);
-    // Strip event handlers (onclick, onerror, onload, etc.)
-    $html = preg_replace('/\s+on\w+\s*=\s*(?:"[^"]*"|\'[^\']*\'|[^\s>]+)/i', '', $html);
-    // Strip dangerous URL schemes in href
-    $html = preg_replace('/href\s*=\s*(?:"|\'?)\s*(?:javascript|data|vbscript|file):/i', 'href="#', $html);
-    return $html;
+    static $purifier = null;
+    if ($purifier === null) {
+        $config = HTMLPurifier_Config::createDefault();
+        $allowed = 'p,br,strong,em,u,s,ul,ol,li,blockquote,pre,code,a[href|title],'
+                 . 'h1,h2,h3,span[style],sub,sup';
+        if ($extraTags !== '') {
+            $allowed .= ',' . $extraTags;
+        }
+        $config->set('HTML.Allowed', $allowed);
+        $config->set('HTML.TargetBlank', true);
+        $config->set('Attr.AllowedFrameTargets', ['_blank']);
+        $config->set('Attr.EnableID', false);
+        $config->set('CSS.AllowedProperties', 'text-decoration,color,background-color');
+        $cacheDir = __DIR__ . '/cache';
+        if (!is_dir($cacheDir)) {
+            @mkdir($cacheDir, 0775, true);
+        }
+        $config->set('Cache.SerializerPath', $cacheDir);
+        $purifier = new HTMLPurifier($config);
+    }
+    return $purifier->purify($html);
 }

@@ -9,28 +9,29 @@ if (session_status() === PHP_SESSION_NONE) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= isset($page_title) ? htmlspecialchars($page_title) . ' — ' : '' ?>Helpdesk</title>
-    <link rel="icon" type="image/svg+xml" href="/helpdesk/assets/img/favicon.svg">
+    <link rel="icon" type="image/svg+xml" href="<?= url('assets/img/favicon.svg') ?>">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.snow.css" rel="stylesheet">
-    <link rel="stylesheet" href="/helpdesk/assets/css/style.css">
+    <link rel="stylesheet" href="<?= url('assets/css/style.css') ?>">
     <?php if (function_exists('generarTokenCSRF')): ?>
     <meta name="csrf-token" content="<?= htmlspecialchars(generarTokenCSRF()) ?>">
     <?php endif; ?>
+    <script>window.BASE_URL = '<?= BASE_URL ?>';</script>
 </head>
 <body>
 <?php if (isset($_SESSION['logged_in']) && $_SESSION['logged_in'] === true): ?>
 <header class="site-header" id="siteHeader">
     <div class="header-inner">
-        <a href="/helpdesk/index.php" class="site-logo">Help<span>Desk</span></a>
+        <a href="<?= url('index.php') ?>" class="site-logo">Help<span>Desk</span></a>
         <nav class="main-nav">
             <?php if ($_SESSION['rol'] === 'cliente'): ?>
-                <a href="/helpdesk/mis_tickets.php" class="<?= basename($_SERVER['PHP_SELF']) === 'mis_tickets.php' ? 'active' : '' ?>">Mis Tickets</a>
+                <a href="<?= url('mis_tickets.php') ?>" class="<?= basename($_SERVER['PHP_SELF']) === 'mis_tickets.php' ? 'active' : '' ?>">Mis Tickets</a>
             <?php endif; ?>
             <?php if (in_array($_SESSION['rol'], ['soporte', 'admin'], true)): ?>
-                <a href="/helpdesk/panel_admin.php" class="<?= basename($_SERVER['PHP_SELF']) === 'panel_admin.php' ? 'active' : '' ?>">Dashboard</a>
-                <a href="/helpdesk/tareas.php" class="<?= basename($_SERVER['PHP_SELF']) === 'tareas.php' || strpos(basename($_SERVER['PHP_SELF']), 'tarea_') === 0 ? 'active' : '' ?>">
+                <a href="<?= url('panel_admin.php') ?>" class="<?= basename($_SERVER['PHP_SELF']) === 'panel_admin.php' ? 'active' : '' ?>">Dashboard</a>
+                <a href="<?= url('tareas.php') ?>" class="<?= basename($_SERVER['PHP_SELF']) === 'tareas.php' || strpos(basename($_SERVER['PHP_SELF']), 'tarea_') === 0 ? 'active' : '' ?>">
                     Tareas
                     <?php
                     $pendientes = 0;
@@ -43,15 +44,15 @@ if (session_status() === PHP_SESSION_NONE) {
                         <span class="nav-badge"><?= $pendientes > 99 ? '99+' : $pendientes ?></span>
                     <?php endif; ?>
                 </a>
-                <a href="/helpdesk/reportes.php" class="<?= basename($_SERVER['PHP_SELF']) === 'reportes.php' ? 'active' : '' ?>">Reportes</a>
+                <a href="<?= url('reportes.php') ?>" class="<?= basename($_SERVER['PHP_SELF']) === 'reportes.php' ? 'active' : '' ?>">Reportes</a>
             <?php endif; ?>
             <?php if ($_SESSION['rol'] === 'admin'): ?>
                 <div class="nav-dropdown" id="adminDropdown">
                     <button class="nav-dropdown-btn" id="adminDropdownBtn">Admin ▾</button>
                     <div class="nav-dropdown-menu" id="adminDropdownMenu">
-                        <a href="/helpdesk/admin/usuarios.php" class="<?= basename($_SERVER['PHP_SELF']) === 'usuarios.php' || basename($_SERVER['PHP_SELF']) === 'usuario_editar.php' ? 'active' : '' ?>">Usuarios</a>
-                        <a href="/helpdesk/admin/categorias.php" class="<?= basename($_SERVER['PHP_SELF']) === 'categorias.php' ? 'active' : '' ?>">Categorias</a>
-                        <a href="/helpdesk/admin/etiquetas.php" class="<?= basename($_SERVER['PHP_SELF']) === 'etiquetas.php' ? 'active' : '' ?>">Etiquetas</a>
+                        <a href="<?= url('admin/usuarios.php') ?>" class="<?= basename($_SERVER['PHP_SELF']) === 'usuarios.php' || basename($_SERVER['PHP_SELF']) === 'usuario_editar.php' ? 'active' : '' ?>">Usuarios</a>
+                        <a href="<?= url('admin/categorias.php') ?>" class="<?= basename($_SERVER['PHP_SELF']) === 'categorias.php' ? 'active' : '' ?>">Categorias</a>
+                        <a href="<?= url('admin/etiquetas.php') ?>" class="<?= basename($_SERVER['PHP_SELF']) === 'etiquetas.php' ? 'active' : '' ?>">Etiquetas</a>
                     </div>
                 </div>
             <?php endif; ?>
@@ -99,7 +100,7 @@ if (session_status() === PHP_SESSION_NONE) {
                                 ");
                                 while ($notif = $notifStmt->fetch()):
                                 ?>
-                                <a href="/helpdesk/ver_ticket.php?id=<?= (int) $notif['id'] ?>" class="notification-link">
+                                <a href="<?= url('ver_ticket.php?id=' . (int) $notif['id']) ?>" class="notification-link">
                                     <li class="notification-item">
                                         <div class="notif-text">
                                             <?php if ($notif['tipo'] === 'urgente'): ?>
@@ -119,8 +120,8 @@ if (session_status() === PHP_SESSION_NONE) {
                     </div>
                 </div>
             <?php endif; ?>
-            <a href="/helpdesk/perfil.php" class="user-name"><?= htmlspecialchars($_SESSION['nombre'] ?? '') ?></a>
-            <a href="/helpdesk/logout.php" class="btn btn-outline btn-sm">Salir</a>
+            <a href="<?= url('perfil.php') ?>" class="user-name"><?= htmlspecialchars($_SESSION['nombre'] ?? '') ?></a>
+            <a href="<?= url('logout.php') ?>" class="btn btn-outline btn-sm">Salir</a>
         </div>
     </div>
 </header>

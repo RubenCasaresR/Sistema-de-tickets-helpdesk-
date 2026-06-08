@@ -1781,6 +1781,34 @@ table tbody tr:last-child td {
     flex-shrink: 0;
 }
 
+.file-gallery-item-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.file-gallery-item-wrapper .file-gallery-item {
+    flex: 1;
+}
+
+.file-delete-btn {
+    background: none;
+    border: 1px solid transparent;
+    color: var(--color-danger);
+    font-size: 1.1rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: var(--radius-sm);
+    line-height: 1;
+    transition: var(--transition);
+}
+
+.file-delete-btn:hover {
+    background: var(--color-danger);
+    color: #fff;
+    border-color: var(--color-danger);
+}
+
 /* ---------- Skeleton Loaders ---------- */
 @keyframes shimmer {
     0% { background-position: -400px 0; }

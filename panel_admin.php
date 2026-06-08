@@ -24,6 +24,10 @@ if (isset($_SESSION['success_message'])) {
     unset($_SESSION['success_message']);
 }
 
+// Pending users notification
+$pendUsers = $pdo->query("SELECT COUNT(*) FROM usuarios WHERE activo = 0 OR activo IS NULL")->fetchColumn();
+$pendingUsers = (int) $pendUsers;
+
 $filtro_estado = $_GET['estado'] ?? '';
 $filtro_prioridad = $_GET['prioridad'] ?? '';
 $filtro_categoria = (int) ($_GET['categoria_id'] ?? 0);
@@ -139,8 +143,15 @@ $page_title = 'Dashboard';
         <h1>Dashboard</h1>
         <p>Panel de administracion de tickets.</p>
     </div>
-    <a href="/helpdesk/crear_ticket.php" class="btn btn-primary">+ Nuevo Ticket</a>
+    <a href="<?= url('crear_ticket.php') ?>" class="btn btn-primary">+ Nuevo Ticket</a>
 </div>
+
+<?php if ($pendingUsers > 0): ?>
+    <div class="alert alert-info">
+        <strong><?= $pendingUsers ?></strong> usuario(s) pendiente(s) de aprobacion.
+        <a href="<?= url('admin/usuarios.php') ?>" style="margin-left:8px">Revisar &rarr;</a>
+    </div>
+<?php endif; ?>
 
 <?php if ($success !== ''): ?>
     <div class="alert alert-success"><?= htmlspecialchars($success) ?></div>
@@ -233,7 +244,7 @@ var chartData = {
                 </div>
                 <button type="submit" class="btn btn-outline btn-sm">Filtrar</button>
                 <?php if ($filtro_estado !== '' || $filtro_prioridad !== ''): ?>
-                    <a href="/helpdesk/panel_admin.php" class="btn btn-outline btn-sm">Limpiar</a>
+                    <a href="<?= url('panel_admin.php') ?>" class="btn btn-outline btn-sm">Limpiar</a>
                 <?php endif; ?>
             </div>
         </form>
@@ -287,7 +298,7 @@ $estados_config = [
                         <div class="kanban-card" data-ticket-id="<?= (int) $ticket['id'] ?>">
                             <div class="kanban-card-folio"><?= htmlspecialchars($ticket['folio']) ?></div>
                             <div class="kanban-card-title">
-                                <a href="/helpdesk/ver_ticket.php?id=<?= (int) $ticket['id'] ?>" style="color:inherit;text-decoration:none">
+                                <a href="<?= url('ver_ticket.php?id=' . (int) $ticket['id']) ?>" style="color:inherit;text-decoration:none">
                                     <?= htmlspecialchars($ticket['titulo']) ?>
                                 </a>
                             </div>
@@ -303,7 +314,7 @@ $estados_config = [
                                 </span>
                             </div>
                             <div class="kanban-card-footer">
-                                <a href="/helpdesk/ver_ticket.php?id=<?= (int) $ticket['id'] ?>" class="btn btn-outline btn-sm w-full">Ver detalle</a>
+                                <a href="<?= url('ver_ticket.php?id=' . (int) $ticket['id']) ?>" class="btn btn-outline btn-sm w-full">Ver detalle</a>
                             </div>
                         </div>
                     <?php endforeach; ?>

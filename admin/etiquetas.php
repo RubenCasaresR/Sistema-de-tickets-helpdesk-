@@ -31,7 +31,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
                 ->execute([':nombre' => $nombre, ':color' => $color]);
             $_SESSION['success_message'] = 'Etiqueta creada.';
         }
-        header('Location: /helpdesk/admin/etiquetas.php');
+        redirect('admin/etiquetas.php');
         exit;
     } elseif ($_POST['accion'] === 'eliminar') {
         $id = (int) ($_POST['id'] ?? 0);
@@ -39,7 +39,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
             $pdo->prepare('DELETE FROM etiquetas WHERE id = :id')->execute([':id' => $id]);
             $_SESSION['success_message'] = 'Etiqueta eliminada.';
         }
-        header('Location: /helpdesk/admin/etiquetas.php');
+        redirect('admin/etiquetas.php');
         exit;
     }
 }

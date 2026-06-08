@@ -8,7 +8,7 @@ $pdo = obtenerConexion();
 
 $ticket_id = (int) ($_GET['id'] ?? 0);
 if ($ticket_id <= 0) {
-    header('Location: /helpdesk/index.php');
+    redirect('index.php');
     exit;
 }
 
@@ -25,13 +25,13 @@ $stmt->execute([':id' => $ticket_id]);
 $ticket = $stmt->fetch();
 
 if (!$ticket) {
-    header('Location: /helpdesk/index.php');
+    redirect('index.php');
     exit;
 }
 
 // Cliente solo ve sus propios tickets
 if ($_SESSION['rol'] === 'cliente' && (int) $ticket['creador_id'] !== $_SESSION['usuario_id']) {
-    header('Location: /helpdesk/mis_tickets.php');
+    redirect('mis_tickets.php');
     exit;
 }
 
@@ -74,7 +74,7 @@ if ($is_staff && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']
             }
 
             $_SESSION['success_message'] = 'Estado actualizado correctamente.';
-            header('Location: /helpdesk/ver_ticket.php?id=' . $ticket_id);
+            redirect('ver_ticket.php?id=' . $ticket_id);
             exit;
         }
         $error = 'Estado invalido.';
@@ -96,7 +96,7 @@ if ($is_staff && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']
                 }
 
                 $_SESSION['success_message'] = 'Ticket reasignado correctamente.';
-                header('Location: /helpdesk/ver_ticket.php?id=' . $ticket_id);
+                redirect('ver_ticket.php?id=' . $ticket_id);
                 exit;
             }
         } elseif ($asignado_id === 0) {
@@ -104,7 +104,7 @@ if ($is_staff && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']
             $upd->execute([':id' => $ticket_id]);
             registrarHistorialTicket($pdo, $ticket_id, $_SESSION['usuario_id'], 'asignacion', 'Asignacion eliminada');
             $_SESSION['success_message'] = 'Asignacion eliminada.';
-            header('Location: /helpdesk/ver_ticket.php?id=' . $ticket_id);
+            redirect('ver_ticket.php?id=' . $ticket_id);
             exit;
         }
         $error = 'Usuario de soporte invalido.';
@@ -166,7 +166,7 @@ if (!$is_ajax && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion']
             }
         }
 
-        header('Location: /helpdesk/ver_ticket.php?id=' . $ticket_id);
+        redirect('ver_ticket.php?id=' . $ticket_id);
         exit;
     }
 }
@@ -316,7 +316,7 @@ $page_title = 'Ticket ' . ($ticket['folio'] ?? '');
 <?php endif; ?>
 
 <div class="page-header">
-    <a href="<?= $is_staff ? '/helpdesk/panel_admin.php' : '/helpdesk/mis_tickets.php' ?>" class="btn btn-outline btn-sm mb-4">&larr; Volver</a>
+    <a href="<?= $is_staff ? url('panel_admin.php') : url('mis_tickets.php') ?>" class="btn btn-outline btn-sm mb-4">&larr; Volver</a>
     <h1>Ticket <?= htmlspecialchars($ticket['folio']) ?></h1>
     <p><?= htmlspecialchars($ticket['titulo']) ?></p>
 </div>
@@ -361,7 +361,7 @@ $page_title = 'Ticket ' . ($ticket['folio'] ?? '');
                     <?php foreach ($tareas_vinculadas as $tv): ?>
                         <div class="linked-task-item">
                             <div class="linked-task-info">
-                                <a href="/helpdesk/tarea_ver.php?id=<?= (int) $tv['id'] ?>" class="linked-task-title">
+                                <a href="<?= url('tarea_ver.php?id=' . (int) $tv['id']) ?>" class="linked-task-title">
                                     <?= htmlspecialchars($tv['titulo']) ?>
                                 </a>
                                 <span class="text-muted text-small">
@@ -405,14 +405,20 @@ $page_title = 'Ticket ' . ($ticket['folio'] ?? '');
                     <div class="file-gallery-title">Archivos subidos</div>
                     <?php foreach ($archivos as $archivo): ?>
                         <?php
-                        $url = '/helpdesk/descargar_archivo.php?id=' . (int) $archivo['id'];
+                        $url = url('descargar_archivo.php?id=' . (int) $archivo['id']);
                         $es_imagen = strpos($archivo['tipo'], 'image/') === 0;
+                        $puede_eliminar = $is_staff || (int) $archivo['usuario_id'] === (int) $_SESSION['usuario_id'] || (int) $ticket['creador_id'] === (int) $_SESSION['usuario_id'];
                         ?>
-                        <a href="<?= $url ?>" class="file-gallery-item" target="_blank" title="<?= htmlspecialchars($archivo['nombre_original']) ?>">
-                            <span class="file-icon-sm"><?= $es_imagen ? '🖼️' : '📎' ?></span>
-                            <span><?= htmlspecialchars($archivo['nombre_original']) ?></span>
-                            <span class="text-muted text-small">(<?= round($archivo['tamano'] / 1024) ?> KB)</span>
-                        </a>
+                        <div class="file-gallery-item-wrapper">
+                            <a href="<?= $url ?>" class="file-gallery-item" target="_blank" title="<?= htmlspecialchars($archivo['nombre_original']) ?>">
+                                <span class="file-icon-sm"><?= $es_imagen ? '🖼️' : '📎' ?></span>
+                                <span><?= htmlspecialchars($archivo['nombre_original']) ?></span>
+                                <span class="text-muted text-small">(<?= round($archivo['tamano'] / 1024) ?> KB)</span>
+                            </a>
+                            <?php if ($puede_eliminar): ?>
+                                <button type="button" class="file-delete-btn" data-file-id="<?= (int) $archivo['id'] ?>" data-filename="<?= htmlspecialchars($archivo['nombre_original']) ?>" title="Eliminar archivo">&times;</button>
+                            <?php endif; ?>
+                        </div>
                     <?php endforeach; ?>
                 </div>
                 <?php endif; ?>
@@ -563,7 +569,7 @@ $page_title = 'Ticket ' . ($ticket['folio'] ?? '');
         <?php if ($is_admin): ?>
         <!-- Edit -->
         <div class="side-panel mt-6">
-            <a href="/helpdesk/editar_ticket.php?id=<?= $ticket_id ?>" class="btn btn-primary btn-block">Editar Ticket</a>
+            <a href="<?= url('editar_ticket.php?id=' . $ticket_id) ?>" class="btn btn-primary btn-block">Editar Ticket</a>
         </div>
 
         <!-- Reassign -->

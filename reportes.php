@@ -105,7 +105,7 @@ $page_title = 'Reportes';
     </div>
     <?php if ($generado && count($tickets) > 0):
         $pdf_params = $_GET;
-        $pdf_url = '/helpdesk/generar_pdf.php?' . http_build_query($pdf_params);
+        $pdf_url = url('generar_pdf.php?' . http_build_query($pdf_params));
     ?>
         <a href="<?= htmlspecialchars($pdf_url) ?>" class="btn btn-primary" target="_blank">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right:4px"><path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v8H6z"/></svg>
@@ -113,7 +113,7 @@ $page_title = 'Reportes';
         </a>
         <?php
         $csv_params = $_GET;
-        $csv_url = '/helpdesk/generar_csv.php?' . http_build_query($csv_params);
+        $csv_url = url('generar_csv.php?' . http_build_query($csv_params));
         ?>
         <a href="<?= htmlspecialchars($csv_url) ?>" class="btn btn-outline" style="margin-left:8px">
             CSV
@@ -151,7 +151,7 @@ $page_title = 'Reportes';
                 </div>
                 <button type="submit" class="btn btn-primary btn-sm">Generar Reporte</button>
                 <?php if ($generado): ?>
-                    <a href="/helpdesk/reportes.php" class="btn btn-outline btn-sm">Limpiar</a>
+                    <a href="<?= url('reportes.php') ?>" class="btn btn-outline btn-sm">Limpiar</a>
                 <?php endif; ?>
             </div>
         </form>

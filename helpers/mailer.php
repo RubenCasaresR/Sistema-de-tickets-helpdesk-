@@ -78,7 +78,7 @@ function notificarStaffNuevoTicket(PDO $pdo, array $ticket): void
         <p><strong>Prioridad:</strong> ' . htmlspecialchars($ticket['prioridad']) . '</p>
         <p><strong>Descripcion:</strong></p>
         <blockquote>' . $ticket['descripcion'] . '</blockquote>
-        <p><a href="' . MAIL_BASE_URL . '/helpdesk/ver_ticket.php?id=' . (int) $ticket['id'] . '">Ver ticket</a></p>
+        <p><a href="' . rtrim(MAIL_BASE_URL, '/') . url('ver_ticket.php?id=' . (int) $ticket['id']) . '">Ver ticket</a></p>
     ';
 
     foreach ($staff as $persona) {
@@ -93,7 +93,7 @@ function notificarComentario(PDO $pdo, int $ticket_id, string $folio, string $au
         <h2>Nuevo comentario en ' . htmlspecialchars($folio) . '</h2>
         <p><strong>' . htmlspecialchars($autor_nombre) . '</strong> ha escrito:</p>
         <blockquote>' . $mensaje . '</blockquote>
-        <p><a href="' . MAIL_BASE_URL . '/helpdesk/ver_ticket.php?id=' . (int) $ticket_id . '">Ver ticket</a></p>
+        <p><a href="' . rtrim(MAIL_BASE_URL, '/') . url('ver_ticket.php?id=' . (int) $ticket_id) . '">Ver ticket</a></p>
     ';
     enviarCorreo($destinatario_email, $asunto, $cuerpo);
 }
@@ -104,7 +104,7 @@ function notificarCambioEstado(string $folio, string $nuevo_estado, string $dest
     $cuerpo = '
         <h2>Estado de ticket actualizado</h2>
         <p>El ticket <strong>' . htmlspecialchars($folio) . '</strong> ha cambiado a <strong>' . htmlspecialchars(ucfirst(str_replace('_', ' ', $nuevo_estado))) . '</strong>.</p>
-        <p><a href="' . MAIL_BASE_URL . '/helpdesk/ver_ticket.php?id=' . (int) $ticket_id . '">Ver ticket</a></p>
+        <p><a href="' . rtrim(MAIL_BASE_URL, '/') . url('ver_ticket.php?id=' . (int) $ticket_id) . '">Ver ticket</a></p>
     ';
     enviarCorreo($destinatario_email, $asunto, $cuerpo);
 }
@@ -115,7 +115,7 @@ function notificarAsignacion(string $folio, string $asignado_nombre, string $des
     $cuerpo = '
         <h2>Ticket Asignado</h2>
         <p>El ticket <strong>' . htmlspecialchars($folio) . '</strong> te ha sido asignado a <strong>' . htmlspecialchars($asignado_nombre) . '</strong>.</p>
-        <p><a href="' . MAIL_BASE_URL . '/helpdesk/ver_ticket.php?id=' . (int) $ticket_id . '">Ver ticket</a></p>
+        <p><a href="' . rtrim(MAIL_BASE_URL, '/') . url('ver_ticket.php?id=' . (int) $ticket_id) . '">Ver ticket</a></p>
     ';
     enviarCorreo($destinatario_email, $asunto, $cuerpo);
 }

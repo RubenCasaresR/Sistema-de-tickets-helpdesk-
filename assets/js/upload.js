@@ -168,7 +168,7 @@
             markError(previewList, file, 'Error de conexion.');
         });
 
-        xhr.open('POST', '/helpdesk/subir_archivo.php', true);
+        xhr.open('POST', window.BASE_URL + '/subir_archivo.php', true);
         xhr.send(formData);
     }
 

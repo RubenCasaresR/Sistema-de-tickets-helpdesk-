@@ -1,9 +1,10 @@
 ﻿<?php
 
 if (session_status() === PHP_SESSION_NONE) {
+    $cookiePath = defined('BASE_URL') && BASE_URL ? BASE_URL : '/helpdesk';
     session_set_cookie_params([
         'lifetime' => 0,
-        'path' => '/helpdesk',
+        'path' => $cookiePath,
         'domain' => '',
         'secure' => !empty($_SERVER['HTTPS']),
         'httponly' => true,
@@ -15,8 +16,7 @@ if (session_status() === PHP_SESSION_NONE) {
 function requiereAutenticacion(): void
 {
     if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-        header('Location: /helpdesk/login.php');
-        exit;
+        redirect('login.php');
     }
 }
 
@@ -25,8 +25,7 @@ function requiereRol(array $roles): void
     requiereAutenticacion();
 
     if (!in_array($_SESSION['rol'] ?? '', $roles, true)) {
-        header('Location: /helpdesk/index.php');
-        exit;
+        redirect('index.php');
     }
 }
 
