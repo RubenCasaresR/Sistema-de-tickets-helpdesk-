@@ -37,20 +37,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'El formato del correo electronico no es valido.';
         } elseif ($pass_actual === '') {
             $error = 'Debes ingresar tu contrasena actual para guardar cambios.';
+        } elseif (!verificarRateLimit('password_verify', (string) $usuario_id, 5, 15)) {
+            $error = 'Demasiados intentos. Intenta de nuevo en 15 minutos.';
         } else {
             $check = $pdo->prepare('SELECT password FROM usuarios WHERE id = :id');
             $check->execute([':id' => $usuario_id]);
             $row = $check->fetch();
 
             if (!password_verify($pass_actual, $row['password'])) {
+                registrarIntentoFallido('', 'password_verify');
                 $error = 'La contrasena actual no es correcta.';
             } else {
                 $dup = $pdo->prepare('SELECT id FROM usuarios WHERE email = :email AND id != :id LIMIT 1');
                 $dup->execute([':email' => $email_nuevo, ':id' => $usuario_id]);
                 if ($dup->fetch()) {
                     $error = 'El correo electronico ya esta registrado por otro usuario.';
-                } elseif ($pass_nueva !== '' && strlen($pass_nueva) < 6) {
-                    $error = 'La nueva contrasena debe tener al menos 6 caracteres.';
+                } elseif ($pass_nueva !== '' && strlen($pass_nueva) < 8) {
+                    $error = 'La nueva contrasena debe tener al menos 8 caracteres.';
                 } elseif ($pass_nueva !== '' && $pass_nueva !== $pass_confirmar) {
                     $error = 'Las contrasenas nuevas no coinciden.';
                 } else {
@@ -122,12 +125,12 @@ $page_title = 'Mi Perfil';
 
             <div class="form-group">
                 <label for="password_nueva">Nueva contrasena <span class="text-muted">(opcional)</span></label>
-                <input type="password" id="password_nueva" name="password_nueva" class="form-control" placeholder="Minimo 6 caracteres" minlength="6">
+                <input type="password" id="password_nueva" name="password_nueva" class="form-control" placeholder="Minimo 8 caracteres" minlength="8">
             </div>
 
             <div class="form-group">
                 <label for="password_confirmar">Confirmar nueva contrasena</label>
-                <input type="password" id="password_confirmar" name="password_confirmar" class="form-control" placeholder="Repite la nueva contrasena" minlength="6">
+                <input type="password" id="password_confirmar" name="password_confirmar" class="form-control" placeholder="Repite la nueva contrasena" minlength="8">
             </div>
 
             <div class="flex gap-4" style="margin-top:24px">

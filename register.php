@@ -31,8 +31,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Todos los campos son obligatorios.';
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = 'El formato del correo electronico no es valido.';
-        } elseif (strlen($password) < 6) {
-            $error = 'La contrasena debe tener al menos 6 caracteres.';
+        } elseif (strlen($password) < 8) {
+            $error = 'La contrasena debe tener al menos 8 caracteres.';
         } elseif ($password !== $confirmar) {
             $error = 'Las contrasenas no coinciden.';
         } else {
@@ -107,12 +107,12 @@ $page_title = 'Registro';
                 <input type="email" id="email" name="email" class="form-control" placeholder="tu@correo.com" required value="<?= htmlspecialchars($email) ?>">
             </div>
             <div class="form-group">
-<label for="password">Contrasena</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="Minimo 6 caracteres" required minlength="6">
+                <label for="password">Contrasena</label>
+                <input type="password" id="password" name="password" class="form-control" placeholder="Minimo 8 caracteres" required minlength="8">
             </div>
             <div class="form-group">
                 <label for="confirmar_password">Confirmar contrasena</label>
-                <input type="password" id="confirmar_password" name="confirmar_password" class="form-control" placeholder="Repite la contrasena" required minlength="6">
+                <input type="password" id="confirmar_password" name="confirmar_password" class="form-control" placeholder="Repite la contrasena" required minlength="8">
             </div>
             <button type="submit" class="btn btn-primary btn-block">Crear Cuenta</button>
         </form>

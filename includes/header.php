@@ -2,6 +2,7 @@
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
+header("Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com https://fonts.gstatic.com; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self'; img-src 'self' data:; form-action 'self';");
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -35,11 +36,19 @@ if (session_status() === PHP_SESSION_NONE) {
                     Tareas
                     <?php
                     $pendientes = 0;
-                    try {
-                        $cntPdo = obtenerConexion();
-                        $cntStmt = $cntPdo->query("SELECT COUNT(*) AS c FROM tareas WHERE estado IN ('pendiente','en_progreso')");
-                        $pendientes = (int) $cntStmt->fetch()['c'];
-                    } catch (Exception $e) {}
+                    $cacheKey = 'nav_tareas_pendientes';
+                    $cacheTime = 30;
+                    if (isset($_SESSION[$cacheKey . '_time']) && time() - $_SESSION[$cacheKey . '_time'] < $cacheTime) {
+                        $pendientes = (int) ($_SESSION[$cacheKey] ?? 0);
+                    } else {
+                        try {
+                            $cntPdo = obtenerConexion();
+                            $cntStmt = $cntPdo->query("SELECT COUNT(*) AS c FROM tareas WHERE estado IN ('pendiente','en_progreso')");
+                            $pendientes = (int) $cntStmt->fetch()['c'];
+                            $_SESSION[$cacheKey] = $pendientes;
+                            $_SESSION[$cacheKey . '_time'] = time();
+                        } catch (Exception $e) {}
+                    }
                     if ($pendientes > 0): ?>
                         <span class="nav-badge"><?= $pendientes > 99 ? '99+' : $pendientes ?></span>
                     <?php endif; ?>
@@ -66,16 +75,25 @@ if (session_status() === PHP_SESSION_NONE) {
             <?php if (in_array($_SESSION['rol'], ['soporte', 'admin'], true)): ?>
                 <?php
                 require_once __DIR__ . '/../conexion.php';
-                try {
-                    $pdo = obtenerConexion();
-                    $stmt = $pdo->query("
-                        SELECT COUNT(*) AS total FROM tickets
-                        WHERE (prioridad = 'urgente' AND asignado_id IS NULL)
-                           OR (estado = 'abierto' AND fecha_creacion <= NOW() - INTERVAL 48 HOUR)
-                    ");
-                    $alerts = (int) $stmt->fetch()['total'];
-                } catch (PDOException $e) {
-                    $alerts = 0;
+                $alerts = 0;
+                $cacheKey = 'nav_alerts_count';
+                $cacheTime = 30;
+                if (isset($_SESSION[$cacheKey . '_time']) && time() - $_SESSION[$cacheKey . '_time'] < $cacheTime) {
+                    $alerts = (int) ($_SESSION[$cacheKey] ?? 0);
+                } else {
+                    try {
+                        $pdo = obtenerConexion();
+                        $stmt = $pdo->query("
+                            SELECT COUNT(*) AS total FROM tickets
+                            WHERE (prioridad = 'urgente' AND asignado_id IS NULL)
+                               OR (estado = 'abierto' AND fecha_creacion <= NOW() - INTERVAL 48 HOUR)
+                        ");
+                        $alerts = (int) $stmt->fetch()['total'];
+                        $_SESSION[$cacheKey] = $alerts;
+                        $_SESSION[$cacheKey . '_time'] = time();
+                    } catch (PDOException $e) {
+                        $alerts = 0;
+                    }
                 }
                 ?>
                 <div class="bell-container">

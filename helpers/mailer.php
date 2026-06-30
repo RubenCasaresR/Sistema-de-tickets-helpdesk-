@@ -77,7 +77,7 @@ function notificarStaffNuevoTicket(PDO $pdo, array $ticket): void
         <p><strong>Titulo:</strong> ' . htmlspecialchars($ticket['titulo']) . '</p>
         <p><strong>Prioridad:</strong> ' . htmlspecialchars($ticket['prioridad']) . '</p>
         <p><strong>Descripcion:</strong></p>
-        <blockquote>' . $ticket['descripcion'] . '</blockquote>
+        <blockquote>' . htmlspecialchars($ticket['descripcion']) . '</blockquote>
         <p><a href="' . rtrim(MAIL_BASE_URL, '/') . url('ver_ticket.php?id=' . (int) $ticket['id']) . '">Ver ticket</a></p>
     ';
 

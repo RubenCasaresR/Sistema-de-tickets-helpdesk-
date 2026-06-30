@@ -12,25 +12,7 @@ $filtro_asignado = $_GET['asignado_id'] ?? '';
 
 $conditions = [];
 $params = [];
-
-if ($filtro_tipo === 'activos') {
-    $conditions[] = "t.estado IN ('abierto', 'en_progreso', 'resuelto')";
-} elseif ($filtro_tipo === 'cerrados') {
-    $conditions[] = "t.estado = 'cerrado'";
-}
-
-if ($filtro_desde !== '') {
-    $conditions[] = 't.fecha_creacion >= :desde';
-    $params[':desde'] = $filtro_desde . ' 00:00:00';
-}
-if ($filtro_hasta !== '') {
-    $conditions[] = 't.fecha_creacion <= :hasta';
-    $params[':hasta'] = $filtro_hasta . ' 23:59:59';
-}
-if ($filtro_asignado !== '' && $filtro_asignado !== '0') {
-    $conditions[] = 't.asignado_id = :asignado_id';
-    $params[':asignado_id'] = (int) $filtro_asignado;
-}
+buildReportFilters($conditions, $params);
 
 $sql = '
     SELECT t.folio, t.titulo, t.estado, t.prioridad,
@@ -49,6 +31,10 @@ $sql .= ' ORDER BY t.fecha_creacion DESC';
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $tickets = $stmt->fetchAll();
+
+if (count($tickets) > 5000) {
+    $tickets = array_slice($tickets, 0, 5000);
+}
 
 header('Content-Type: text/csv; charset=utf-8');
 header('Content-Disposition: attachment; filename="reporte_tickets_' . date('Y-m-d') . '.csv"');

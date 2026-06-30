@@ -13,8 +13,12 @@ $error   = '';
 $success = '';
 $email   = '';
 
+limpiarTokensExpirados();
+
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    if (!validarTokenCSRF($_POST['csrf_token'] ?? '')) {
+    if (!verificarRateLimit('password_reset', $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', 5, 15)) {
+        $error = 'Demasiados intentos. Intenta de nuevo en 15 minutos.';
+    } elseif (!validarTokenCSRF($_POST['csrf_token'] ?? '')) {
         $error = 'Token de seguridad invalido.';
     } else {
         $email = trim($_POST['email'] ?? '');
@@ -52,13 +56,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     }
                 }
 
-                $smtpDeshabilitado = !defined('MAIL_USER') || MAIL_USER === '' || !defined('MAIL_PASS') || MAIL_PASS === '';
-                if ($usuario && !empty($enlace) && ($smtpDeshabilitado || empty($enviado))) {
-                    $success = 'Haz clic en el siguiente enlace para restablecer tu contrasena (valido por 1 hora):<br>
-                        <a href="' . htmlspecialchars($enlace) . '" style="display:inline-block;margin-top:8px;padding:10px 20px;background:#2d3436;color:#fff;text-decoration:none;border-radius:6px">Restablecer Contrasena</a>';
-                } else {
-                    $success = 'Si la cuenta existe, recibiras un correo con instrucciones para restablecer tu contrasena.';
-                }
+                $success = 'Si la cuenta existe, recibiras un correo con instrucciones para restablecer tu contrasena.';
                 $email = '';
             } catch (PDOException $e) {
                 error_log('Error en recuperar contrasena: ' . $e->getMessage());

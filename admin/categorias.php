@@ -42,8 +42,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])) {
     } elseif ($_POST['accion'] === 'eliminar') {
         $id = (int) ($_POST['id'] ?? 0);
         if ($id > 0) {
-            $pdo->prepare('DELETE FROM categorias WHERE id = :id')->execute([':id' => $id]);
-            $_SESSION['success_message'] = 'Categoria eliminada.';
+            $check = $pdo->prepare('SELECT COUNT(*) FROM tickets WHERE categoria_id = :id');
+            $check->execute([':id' => $id]);
+            $count = (int) $check->fetchColumn();
+            if ($count > 0) {
+                $error = "No se puede eliminar: {$count} ticket(s) usan esta categoria. Desactivala en su lugar.";
+            } else {
+                $pdo->prepare('DELETE FROM categorias WHERE id = :id')->execute([':id' => $id]);
+                $_SESSION['success_message'] = 'Categoria eliminada.';
+            }
         }
         redirect('admin/categorias.php');
         exit;

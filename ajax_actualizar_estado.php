@@ -7,6 +7,12 @@ header('Content-Type: application/json');
 
 $input = json_decode(file_get_contents('php://input'), true);
 
+if ($input === null) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Solicitud invalida.']);
+    exit;
+}
+
 $ticket_id  = (int) ($input['ticket_id'] ?? 0);
 $estado     = $input['estado'] ?? '';
 $csrf_token = $input['csrf_token'] ?? '';

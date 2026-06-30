@@ -36,6 +36,11 @@ if ($tarea_id <= 0 || $mensaje === '') {
 
 try {
     $mensaje = sanitizarDescripcion($mensaje);
+    if ($mensaje === '') {
+        http_response_code(400);
+        echo json_encode(['success' => false, 'error' => 'El comentario no puede estar vacio.']);
+        exit;
+    }
     $ins = $pdo->prepare('INSERT INTO tarea_comentarios (tarea_id, usuario_id, mensaje) VALUES (:tarea_id, :usuario_id, :mensaje)');
     $ins->execute([':tarea_id' => $tarea_id, ':usuario_id' => $_SESSION['usuario_id'], ':mensaje' => $mensaje]);
     registrarHistorial($pdo, $tarea_id, $_SESSION['usuario_id'], 'comentario', 'Agrego un comentario');
@@ -62,6 +67,7 @@ try {
     <?php
     echo json_encode(['success' => true, 'html' => ob_get_clean()]);
 } catch (PDOException $e) {
+    if (ob_get_level()) ob_end_clean();
     error_log('Error ajax_tarea_comentario: ' . $e->getMessage());
     http_response_code(500);
     echo json_encode(['success' => false, 'error' => 'Error']);

@@ -48,6 +48,7 @@ CREATE TABLE usuarios (
     email VARCHAR(255) NOT NULL UNIQUE,
     password VARCHAR(255) NOT NULL,
     rol ENUM('cliente', 'soporte', 'admin') NOT NULL DEFAULT 'cliente',
+    activo TINYINT(1) NOT NULL DEFAULT 1,
     fecha_creacion DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
@@ -141,10 +142,10 @@ CREATE TABLE password_resets (
 -- Passwords: 'password123' (hash generado con password_hash)
 -- ============================================================
 
-INSERT INTO usuarios (nombre, email, password, rol) VALUES
-('Admin Principal', 'admin@helpdesk.com', '$2y$12$macVqzDmUY7G25xkXsZ5c.ldVoR0e6crydpOInAPh49v5zd5XOHQm', 'admin'),
-('Soporte Técnico', 'soporte@helpdesk.com', '$2y$12$macVqzDmUY7G25xkXsZ5c.ldVoR0e6crydpOInAPh49v5zd5XOHQm', 'soporte'),
-('Cliente Demo', 'cliente@helpdesk.com', '$2y$12$macVqzDmUY7G25xkXsZ5c.ldVoR0e6crydpOInAPh49v5zd5XOHQm', 'cliente');
+INSERT INTO usuarios (nombre, email, password, rol, activo) VALUES
+('Admin Principal', 'admin@helpdesk.com', '$2y$12$macVqzDmUY7G25xkXsZ5c.ldVoR0e6crydpOInAPh49v5zd5XOHQm', 'admin', 1),
+('Soporte Técnico', 'soporte@helpdesk.com', '$2y$12$macVqzDmUY7G25xkXsZ5c.ldVoR0e6crydpOInAPh49v5zd5XOHQm', 'soporte', 1),
+('Cliente Demo', 'cliente@helpdesk.com', '$2y$12$macVqzDmUY7G25xkXsZ5c.ldVoR0e6crydpOInAPh49v5zd5XOHQm', 'cliente', 1);
 
 INSERT INTO tickets (folio, titulo, descripcion, estado, prioridad, creador_id, asignado_id, fecha_creacion) VALUES
 ('TCK-00001', 'No puedo iniciar sesión en el sistema', 'Hola, desde esta mañana no logro acceder a mi cuenta. He intentado restablecer la contraseña pero no recibo el correo.', 'en_progreso', 'alta', 3, 2, '2026-05-30 09:15:00'),

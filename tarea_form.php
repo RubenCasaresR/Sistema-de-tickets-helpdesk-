@@ -65,6 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $error = 'Prioridad invalida.';
     } elseif (!in_array($estado, ['pendiente', 'en_progreso', 'en_revision', 'completada', 'cancelada'])) {
         $error = 'Estado invalido.';
+    } elseif ($fecha_limite !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $fecha_limite)) {
+        $error = 'Fecha limite invalida.';
     } else {
         try {
             $pdo->beginTransaction();

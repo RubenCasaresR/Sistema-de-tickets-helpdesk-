@@ -153,6 +153,7 @@
                     var data = JSON.parse(xhr.responseText);
                     if (data.success) {
                         markComplete(previewList, file);
+                        addFileToGallery(dropZone, data.archivo);
                     } else {
                         markError(previewList, file, data.error || 'Error al subir.');
                     }
@@ -214,6 +215,60 @@
             }
         }
         if (window.showToast) showToast(error, 'error');
+    }
+
+    function addFileToGallery(dropZone, archivo) {
+        var cardBody = dropZone.closest('.card-body');
+        if (!cardBody) return;
+
+        var gallery = cardBody.querySelector('.file-gallery');
+        if (!gallery) {
+            gallery = document.createElement('div');
+            gallery.className = 'file-gallery';
+            var title = document.createElement('div');
+            title.className = 'file-gallery-title';
+            title.textContent = 'Archivos subidos';
+            gallery.appendChild(title);
+            cardBody.appendChild(gallery);
+        }
+
+        var wrapper = document.createElement('div');
+        wrapper.className = 'file-gallery-item-wrapper';
+
+        var link = document.createElement('a');
+        link.href = archivo.url;
+        link.className = 'file-gallery-item';
+        link.target = '_blank';
+        link.title = archivo.nombre_original;
+
+        var iconSpan = document.createElement('span');
+        iconSpan.className = 'file-icon-sm';
+        iconSpan.textContent = archivo.tipo.indexOf('image/') === 0 ? '🖼️' : '📎';
+        link.appendChild(iconSpan);
+
+        var nameSpan = document.createElement('span');
+        nameSpan.textContent = archivo.nombre_original;
+        link.appendChild(nameSpan);
+
+        var sizeSpan = document.createElement('span');
+        sizeSpan.className = 'text-muted text-small';
+        sizeSpan.textContent = ' (' + Math.round(archivo.tamano / 1024) + ' KB)';
+        link.appendChild(sizeSpan);
+
+        wrapper.appendChild(link);
+
+        var deleteBtn = document.createElement('button');
+        deleteBtn.type = 'button';
+        deleteBtn.className = 'file-delete-btn';
+        deleteBtn.setAttribute('data-file-id', archivo.id);
+        deleteBtn.setAttribute('data-filename', archivo.nombre_original);
+        deleteBtn.title = 'Eliminar archivo';
+        deleteBtn.innerHTML = '&times;';
+        wrapper.appendChild(deleteBtn);
+
+        gallery.appendChild(wrapper);
+
+        if (window.showToast) showToast('Archivo subido correctamente.', 'success');
     }
 
     function getFileIcon(filename) {

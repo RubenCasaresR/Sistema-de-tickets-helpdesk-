@@ -13,31 +13,23 @@ $filtro_desde      = $_GET['desde'] ?? '';
 $filtro_hasta      = $_GET['hasta'] ?? '';
 $filtro_asignado   = $_GET['asignado_id'] ?? '';
 
+define('MAX_PDF_TICKETS', 500);
+
 $staffStmt = $pdo->query("SELECT id, nombre FROM usuarios WHERE rol IN ('soporte', 'admin') ORDER BY nombre");
 $personal_staff = $staffStmt->fetchAll();
 
 $conditions = [];
 $params = [];
+buildReportFilters($conditions, $params);
 
-if ($filtro_tipo === 'activos') {
-    $conditions[] = "t.estado IN ('abierto', 'en_progreso', 'resuelto')";
-} elseif ($filtro_tipo === 'cerrados') {
-    $conditions[] = "t.estado = 'cerrado'";
+$countSql = 'SELECT COUNT(*) FROM tickets t JOIN usuarios c ON c.id = t.creador_id LEFT JOIN usuarios a ON a.id = t.asignado_id';
+if (count($conditions) > 0) {
+    $countSql .= ' WHERE ' . implode(' AND ', $conditions);
 }
-
-if ($filtro_desde !== '') {
-    $conditions[] = 't.fecha_creacion >= :desde';
-    $params[':desde'] = $filtro_desde . ' 00:00:00';
-}
-if ($filtro_hasta !== '') {
-    $conditions[] = 't.fecha_creacion <= :hasta';
-    $params[':hasta'] = $filtro_hasta . ' 23:59:59';
-}
-
-if ($filtro_asignado !== '' && $filtro_asignado !== '0') {
-    $conditions[] = 't.asignado_id = :asignado_id';
-    $params[':asignado_id'] = (int) $filtro_asignado;
-}
+$countStmt = $pdo->prepare($countSql);
+$countStmt->execute($params);
+$totalCount = (int) $countStmt->fetchColumn();
+$truncated = $totalCount > MAX_PDF_TICKETS;
 
 $sql = '
     SELECT t.*, c.nombre AS creador_nombre, a.nombre AS asignado_nombre
@@ -48,7 +40,7 @@ $sql = '
 if (count($conditions) > 0) {
     $sql .= ' WHERE ' . implode(' AND ', $conditions);
 }
-$sql .= ' ORDER BY t.fecha_creacion DESC';
+$sql .= ' ORDER BY t.fecha_creacion DESC LIMIT ' . MAX_PDF_TICKETS;
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
@@ -133,7 +125,10 @@ ob_start();
 <h1>Reporte de Tickets</h1>
 <div class="report-meta">
     Generado el <?= date('d/m/Y H:i') ?> &mdash; <?= htmlspecialchars(implode(' | ', $filtros_aplicados)) ?><br>
-    Total: <?= count($tickets) ?> tickets &mdash; <?= $con_avances ?> con avances &mdash; <?= count($tickets) - $con_avances ?> sin avances
+    Total: <?= $totalCount ?> tickets &mdash; <?= $con_avances ?> con avances &mdash; <?= count($tickets) - $con_avances ?> sin avances
+    <?php if ($truncated): ?>
+    <br><strong style="color:#dc2626;">Nota:</strong> Mostrando solo los primeros <?= MAX_PDF_TICKETS ?> tickets. <?= $totalCount - MAX_PDF_TICKETS ?> tickets no fueron incluidos. Ajuste los filtros para acotar el reporte.
+    <?php endif; ?>
 </div>
 
 <table class="summary-table">

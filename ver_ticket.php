@@ -216,13 +216,7 @@ if ($is_ajax && $_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['accion'])
                             <?php endif; ?>
                             <span class="comment-date"><?= htmlspecialchars(date('d/m/Y H:i', strtotime($com['fecha']))) ?></span>
                         </div>
-                        <div class="comment-text"><?php
-                            if (strip_tags($com['mensaje']) !== $com['mensaje']) {
-                                echo $com['mensaje'];
-                            } else {
-                                echo nl2br(htmlspecialchars($com['mensaje']));
-                            }
-                        ?></div>
+                        <div class="comment-text"><?= sanitizarDescripcion($com['mensaje']) ?></div>
                     </div>
                 </div>
             <?php endforeach; ?>
@@ -345,7 +339,7 @@ $page_title = 'Ticket ' . ($ticket['folio'] ?? '');
                     <p class="text-muted text-small">Creado por <strong><?= htmlspecialchars($ticket['creador_nombre']) ?></strong> el <?= htmlspecialchars(date('d/m/Y H:i', strtotime($ticket['fecha_creacion']))) ?></p>
                 </div>
                 <div style="font-size:0.9rem;color:var(--color-text-primary);line-height:1.7">
-                    <?= $ticket['descripcion'] ?>
+                    <?= sanitizarDescripcion($ticket['descripcion']) ?>
                 </div>
             </div>
         </div>
@@ -451,13 +445,7 @@ $page_title = 'Ticket ' . ($ticket['folio'] ?? '');
                                         <?php endif; ?>
                                         <span class="comment-date"><?= htmlspecialchars(date('d/m/Y H:i', strtotime($com['fecha']))) ?></span>
                                     </div>
-                                    <div class="comment-text"><?php
-                                        if (strip_tags($com['mensaje']) !== $com['mensaje']) {
-                                            echo $com['mensaje'];
-                                        } else {
-                                            echo nl2br(htmlspecialchars($com['mensaje']));
-                                        }
-                                    ?></div>
+                                    <div class="comment-text"><?= sanitizarDescripcion($com['mensaje']) ?></div>
                                 </div>
                             </div>
                         <?php endforeach; ?>
@@ -597,6 +585,28 @@ $page_title = 'Ticket ' . ($ticket['folio'] ?? '');
     <?php endif; ?>
 </div>
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var estadoForm = document.querySelector('.side-panel form');
+    if (estadoForm) {
+        estadoForm.addEventListener('submit', function(e) {
+            var select = this.querySelector('select[name="estado"]');
+            if (select) {
+                var val = select.value;
+                var msgs = {
+                    'cerrado': '¿Cerrar este ticket definitivamente? No se podra reabrir.',
+                    'resuelto': '¿Marcar este ticket como resuelto?',
+                    'en_progreso': '¿Cambiar estado a En Progreso?',
+                    'abierto': '¿Reabrir este ticket?'
+                };
+                if (msgs[val] && !confirm(msgs[val])) {
+                    e.preventDefault();
+                }
+            }
+        });
+    }
+});
+</script>
 <?php require_once __DIR__ . '/includes/footer.php'; ?>
 
 

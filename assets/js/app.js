@@ -267,11 +267,11 @@
             .then(function (html) {
                 if (container) {
                     container.innerHTML = html;
-                    // Re-init Quill in the new content
                     initQuill(container);
-                    // Clear draft
                     clearDraft('draft_mensaje');
                 }
+                btn.disabled = false;
+                btn.textContent = 'Registrar Avance';
             })
             .catch(function () {
                 btn.disabled = false;
@@ -424,6 +424,7 @@
 
     // ---------- Charts ----------
     var chartEstadoInstance = null;
+    var chartPrioridadInstance = null;
     var colorMap = { abierto: '#f59e0b', en_progreso: '#3b82f6', resuelto: '#10b981', cerrado: '#94a3b8' };
 
     if (typeof Chart !== 'undefined' && typeof chartData !== 'undefined') {
@@ -486,7 +487,7 @@
 
         var ctxPrioridad = document.getElementById('chartPrioridad');
         if (ctxPrioridad && chartData.prioridad.labels.length > 0) {
-            new Chart(ctxPrioridad, {
+            chartPrioridadInstance = new Chart(ctxPrioridad, {
                 type: 'bar',
                 data: {
                     labels: chartData.prioridad.labels,
@@ -511,7 +512,19 @@
         fetch(window.BASE_URL + '/ajax_estadisticas.php')
             .then(function (r) { return r.json(); })
             .then(function (data) {
-                if (data && data.estado) {
+                if (!data) return;
+
+                if (data.stats) {
+                    var statNumbers = document.querySelectorAll('.stats-grid .stat-number');
+                    if (statNumbers.length >= 4) {
+                        statNumbers[0].textContent = data.stats.abiertos;
+                        statNumbers[1].textContent = data.stats.en_progreso;
+                        statNumbers[2].textContent = data.stats.urgentes;
+                        statNumbers[3].textContent = data.stats.total;
+                    }
+                }
+
+                if (data.estado) {
                     var labels = [];
                     var values = [];
                     var colors = [];
@@ -525,6 +538,21 @@
                     chartEstadoInstance.data.datasets[0].data = values;
                     chartEstadoInstance.data.datasets[0].backgroundColor = colors;
                     chartEstadoInstance.update();
+                }
+
+                if (data.prioridad && chartPrioridadInstance) {
+                    var pLabels = [];
+                    var pValues = [];
+                    var pColors = [];
+                    data.prioridad.forEach(function (item) {
+                        pLabels.push(item.label);
+                        pValues.push(item.value);
+                        pColors.push(item.color);
+                    });
+                    chartPrioridadInstance.data.labels = pLabels;
+                    chartPrioridadInstance.data.datasets[0].data = pValues;
+                    chartPrioridadInstance.data.datasets[0].backgroundColor = pColors;
+                    chartPrioridadInstance.update();
                 }
             })
             .catch(function () {

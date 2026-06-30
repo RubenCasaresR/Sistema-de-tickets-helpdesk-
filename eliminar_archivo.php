@@ -12,6 +12,13 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 $input = json_decode(file_get_contents('php://input'), true);
+
+if ($input === null) {
+    http_response_code(400);
+    echo json_encode(['success' => false, 'error' => 'Solicitud invalida.']);
+    exit;
+}
+
 $file_id = (int) ($input['id'] ?? 0);
 $csrf_token = $input['csrf_token'] ?? '';
 
@@ -71,7 +78,7 @@ try {
     $del->execute([':id' => $file_id]);
 
     $ticket_id = (int) $archivo['ticket_id'];
-    $path = __DIR__ . '/uploads/tickets/' . $ticket_id . '/' . $archivo['nombre_archivo'];
+    $path = __DIR__ . '/uploads/tickets/' . $ticket_id . '/' . basename($archivo['nombre_archivo']);
     if (file_exists($path)) {
         @unlink($path);
     }

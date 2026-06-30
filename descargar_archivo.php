@@ -12,11 +12,9 @@ if ($id <= 0) {
 $pdo = obtenerConexion();
 
 $stmt = $pdo->prepare('
-    SELECT a.*, t.creador_id AS ticket_creador_id, t.asignado_id,
-           c.usuario_id AS comentario_usuario_id
+    SELECT a.*, t.creador_id AS ticket_creador_id, t.asignado_id
     FROM archivos_ticket a
     JOIN tickets t ON t.id = a.ticket_id
-    LEFT JOIN comentarios_ticket c ON c.id = a.comentario_id
     WHERE a.id = :id
 ');
 $stmt->execute([':id' => $id]);
@@ -37,11 +35,13 @@ $tiene_acceso = false;
 
 if ($rol === 'admin') {
     $tiene_acceso = true;
+} elseif ($rol === 'soporte') {
+    $tiene_acceso = true;
 } elseif ((int) $archivo['ticket_creador_id'] === $usuario_id) {
     $tiene_acceso = true;
 } elseif ((int) $archivo['asignado_id'] === $usuario_id) {
     $tiene_acceso = true;
-} elseif ((int) $archivo['comentario_usuario_id'] === $usuario_id) {
+} elseif ((int) $archivo['usuario_id'] === $usuario_id) {
     $tiene_acceso = true;
 }
 
@@ -52,7 +52,7 @@ if (!$tiene_acceso) {
 }
 
 // --- Serve file ---
-$path = __DIR__ . '/uploads/tickets/' . $ticket_id . '/' . $archivo['nombre_archivo'];
+    $path = __DIR__ . '/uploads/tickets/' . $ticket_id . '/' . basename($archivo['nombre_archivo']);
 if (!file_exists($path)) {
     http_response_code(404);
     echo 'Archivo no encontrado.';

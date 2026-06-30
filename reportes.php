@@ -21,29 +21,7 @@ $generado = $_SERVER['REQUEST_METHOD'] === 'GET' && (isset($_GET['tipo']) || iss
 if ($generado) {
     $conditions = [];
     $params = [];
-
-    // Filtro por tipo (activos / cerrados / todos)
-    if ($filtro_tipo === 'activos') {
-        $conditions[] = "t.estado IN ('abierto', 'en_progreso', 'resuelto')";
-    } elseif ($filtro_tipo === 'cerrados') {
-        $conditions[] = "t.estado = 'cerrado'";
-    }
-
-    // Filtro por rango de fechas
-    if ($filtro_desde !== '') {
-        $conditions[] = 't.fecha_creacion >= :desde';
-        $params[':desde'] = $filtro_desde . ' 00:00:00';
-    }
-    if ($filtro_hasta !== '') {
-        $conditions[] = 't.fecha_creacion <= :hasta';
-        $params[':hasta'] = $filtro_hasta . ' 23:59:59';
-    }
-
-    // Filtro por agente asignado
-    if ($filtro_asignado !== '' && $filtro_asignado !== '0') {
-        $conditions[] = 't.asignado_id = :asignado_id';
-        $params[':asignado_id'] = (int) $filtro_asignado;
-    }
+    buildReportFilters($conditions, $params);
 
     $sql = '
         SELECT t.*, c.nombre AS creador_nombre, a.nombre AS asignado_nombre

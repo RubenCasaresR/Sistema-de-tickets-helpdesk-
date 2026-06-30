@@ -12,6 +12,8 @@ $error   = '';
 $success = '';
 $token   = $_GET['token'] ?? '';
 
+limpiarTokensExpirados();
+
 // Validar token
 if ($token === '') {
     $error = 'Token invalido.';
@@ -32,14 +34,17 @@ if ($token === '') {
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $reset) {
-    if (!validarTokenCSRF($_POST['csrf_token'] ?? '')) {
+    if (!verificarRateLimit('password_reset_submit', $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0', 5, 15)) {
+        $error = 'Demasiados intentos. Intenta de nuevo en 15 minutos.';
+        $reset = null;
+    } elseif (!validarTokenCSRF($_POST['csrf_token'] ?? '')) {
         $error = 'Token de seguridad invalido.';
     } else {
         $password = $_POST['password'] ?? '';
         $confirmar = $_POST['password_confirmar'] ?? '';
 
-        if (strlen($password) < 6) {
-            $error = 'La contrasena debe tener al menos 6 caracteres.';
+        if (strlen($password) < 8) {
+            $error = 'La contrasena debe tener al menos 8 caracteres.';
         } elseif ($password !== $confirmar) {
             $error = 'Las contrasenas no coinciden.';
         } else {
@@ -81,11 +86,11 @@ $csrf_token = generarTokenCSRF();
             <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($csrf_token) ?>">
             <div class="form-group">
                 <label for="password">Nueva contrasena</label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="Minimo 6 caracteres" required minlength="6">
+                <input type="password" id="password" name="password" class="form-control" placeholder="Minimo 8 caracteres" required minlength="8">
             </div>
             <div class="form-group">
                 <label for="password_confirmar">Confirmar contrasena</label>
-                <input type="password" id="password_confirmar" name="password_confirmar" class="form-control" placeholder="Repite la contrasena" required minlength="6">
+                <input type="password" id="password_confirmar" name="password_confirmar" class="form-control" placeholder="Repite la contrasena" required minlength="8">
             </div>
             <button type="submit" class="btn btn-primary btn-block">Guardar Nueva Contrasena</button>
         </form>

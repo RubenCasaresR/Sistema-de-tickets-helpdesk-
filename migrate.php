@@ -23,7 +23,7 @@ $pdo->exec("
 $applied = $pdo->query("SELECT filename FROM _migrations")->fetchAll(PDO::FETCH_COLUMN);
 
 $migrationsDir = __DIR__ . '/sql/migrations';
-$files = glob($migrationsDir . '/*.sql');
+$files = glob($migrationsDir . '/*.{sql,php}', GLOB_BRACE);
 sort($files);
 
 $count = 0;
@@ -36,6 +36,21 @@ foreach ($files as $file) {
     }
 
     echo "  RUN  {$basename}... ";
+
+    if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
+        try {
+            ob_start();
+            require $file;
+            $output = ob_get_clean();
+            echo $output ?: "OK\n";
+            $pdo->prepare("INSERT INTO _migrations (filename) VALUES (:f)")->execute([':f' => $basename]);
+            $count++;
+        } catch (Exception $e) {
+            echo "ERROR: " . $e->getMessage() . "\n";
+            exit(1);
+        }
+        continue;
+    }
 
     $sql = file_get_contents($file);
 

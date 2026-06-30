@@ -7,6 +7,7 @@
  */
 
 // ── Timezone ──
+error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT);
 date_default_timezone_set('America/Mexico_City');
 
 // ── Load .env ──
@@ -19,6 +20,7 @@ define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') ?: '');
 
 define('BASE_URL', getenv('BASE_URL') ?: '/helpdesk');
+define('SESSION_LIFETIME', (int) (getenv('SESSION_LIFETIME') ?: 28800));
 
 function url(string $path = ''): string
 {

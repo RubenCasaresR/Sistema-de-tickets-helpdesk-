@@ -84,6 +84,78 @@ function registrarHistorialTicket(PDO $pdo, int $ticket_id, int $usuario_id, str
         ':detalle'    => $detalle,
     ]);
 }
+// ── Report helpers (DRY) ──
+
+function buildReportFilters(array &$conditions, array &$params): void
+{
+    $filtro_tipo    = $_GET['tipo'] ?? 'todos';
+    $filtro_desde   = $_GET['desde'] ?? '';
+    $filtro_hasta   = $_GET['hasta'] ?? '';
+    $filtro_asignado = $_GET['asignado_id'] ?? '';
+
+    if ($filtro_tipo === 'activos') {
+        $conditions[] = "t.estado IN ('abierto', 'en_progreso', 'resuelto')";
+    } elseif ($filtro_tipo === 'cerrados') {
+        $conditions[] = "t.estado = 'cerrado'";
+    }
+
+    if ($filtro_desde !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $filtro_desde)) {
+        $conditions[] = 't.fecha_creacion >= :desde';
+        $params[':desde'] = $filtro_desde . ' 00:00:00';
+    }
+    if ($filtro_hasta !== '' && preg_match('/^\d{4}-\d{2}-\d{2}$/', $filtro_hasta)) {
+        $conditions[] = 't.fecha_creacion <= :hasta';
+        $params[':hasta'] = $filtro_hasta . ' 23:59:59';
+    }
+    if ($filtro_asignado !== '' && $filtro_asignado !== '0') {
+        $conditions[] = 't.asignado_id = :asignado_id';
+        $params[':asignado_id'] = (int) $filtro_asignado;
+    }
+}
+
+// ── Rate limiting ──
+
+function verificarRateLimit(string $tipo, string $identificador, int $maxIntentos = 5, int $ventanaMinutos = 15): bool
+{
+    $pdo = obtenerConexion();
+    $limite = date('Y-m-d H:i:s', strtotime("-{$ventanaMinutos} minutes"));
+    $stmt = $pdo->prepare('SELECT COUNT(*) FROM login_attempts WHERE tipo = :tipo AND (email = :identificador OR ip_address = :ip) AND attempted_at >= :limite');
+    $stmt->execute([
+        ':tipo' => $tipo,
+        ':identificador' => $identificador,
+        ':ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
+        ':limite' => $limite,
+    ]);
+    return (int) $stmt->fetchColumn() < $maxIntentos;
+}
+
+function registrarIntentoFallido(string $email = '', string $tipo = 'login'): void
+{
+    try {
+        $pdo = obtenerConexion();
+        $ins = $pdo->prepare('INSERT INTO login_attempts (ip_address, email, tipo) VALUES (:ip, :email, :tipo)');
+        $ins->execute([
+            ':ip' => $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0',
+            ':email' => $email,
+            ':tipo' => $tipo,
+        ]);
+    } catch (PDOException $e) {
+        error_log('Error al registrar intento: ' . $e->getMessage());
+    }
+}
+
+// ── Cleanup expired tokens ──
+
+function limpiarTokensExpirados(): void
+{
+    try {
+        $pdo = obtenerConexion();
+        $pdo->exec("DELETE FROM password_resets WHERE expira_en < NOW()");
+    } catch (PDOException $e) {
+        error_log('Error limpiando tokens: ' . $e->getMessage());
+    }
+}
+
 // ── HTML sanitizer (HTMLPurifier) ──
 
 function sanitizarDescripcion(string $html, string $extraTags = ''): string {

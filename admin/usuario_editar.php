@@ -44,8 +44,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $error = 'Rol invalido.';
         } elseif ($es_nuevo && $password === '') {
             $error = 'La contrasena es obligatoria para nuevos usuarios.';
-        } elseif (!$es_nuevo && $password !== '' && strlen($password) < 6) {
-            $error = 'La contrasena debe tener al menos 6 caracteres.';
+        } elseif (!$es_nuevo && $password !== '' && strlen($password) < 8) {
+            $error = 'La contrasena debe tener al menos 8 caracteres.';
         } else {
             // Verificar email unico
             $dup = $pdo->prepare('SELECT id FROM usuarios WHERE email = :email' . ($es_nuevo ? '' : ' AND id != :id') . ' LIMIT 1');
@@ -125,7 +125,7 @@ $csrf_token = generarTokenCSRF();
 
             <div class="form-group">
                 <label for="password">Contrasena <?= $es_nuevo ? '' : '<span class="text-muted">(dejar vacio para mantener)</span>' ?></label>
-                <input type="password" id="password" name="password" class="form-control" placeholder="<?= $es_nuevo ? 'Minimo 6 caracteres' : 'Nueva contrasena (opcional)' ?>" <?= $es_nuevo ? 'required' : '' ?> minlength="6">
+                <input type="password" id="password" name="password" class="form-control" placeholder="<?= $es_nuevo ? 'Minimo 8 caracteres' : 'Nueva contrasena (opcional)' ?>" <?= $es_nuevo ? 'required' : '' ?> minlength="8">
             </div>
 
             <div class="flex gap-4" style="margin-top:24px">

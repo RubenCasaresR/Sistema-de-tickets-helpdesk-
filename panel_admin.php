@@ -7,16 +7,21 @@ $pdo = obtenerConexion();
 
 // Stats
 $stats = [];
-$statsQuery = $pdo->query("
-    SELECT
-        COUNT(*) AS total,
-        SUM(estado = 'abierto') AS abiertos,
-        SUM(estado = 'en_progreso') AS en_progreso,
-        SUM(estado = 'resuelto') AS resueltos,
-        SUM(prioridad = 'urgente') AS urgentes
-    FROM tickets
-");
-$stats = $statsQuery->fetch();
+try {
+    $statsQuery = $pdo->query("
+        SELECT
+            COUNT(*) AS total,
+            SUM(estado = 'abierto') AS abiertos,
+            SUM(estado = 'en_progreso') AS en_progreso,
+            SUM(estado = 'resuelto') AS resueltos,
+            SUM(prioridad = 'urgente') AS urgentes
+        FROM tickets
+    ");
+    $stats = $statsQuery->fetch();
+} catch (PDOException $e) {
+    error_log('Error obteniendo stats: ' . $e->getMessage());
+    $stats = ['total' => 0, 'abiertos' => 0, 'en_progreso' => 0, 'resueltos' => 0, 'urgentes' => 0];
+}
 
 $success = '';
 if (isset($_SESSION['success_message'])) {
@@ -167,6 +172,10 @@ $page_title = 'Dashboard';
         <div class="stat-number"><?= (int) ($stats['abiertos'] ?? 0) ?></div>
         <div class="stat-label">Abiertos</div>
     </div>
+    <div class="stat-card stat-progress">
+        <div class="stat-number"><?= (int) ($stats['en_progreso'] ?? 0) ?></div>
+        <div class="stat-label">En Progreso</div>
+    </div>
     <div class="stat-card stat-urgent">
         <div class="stat-number"><?= (int) ($stats['urgentes'] ?? 0) ?></div>
         <div class="stat-label">Urgentes</div>
@@ -287,7 +296,7 @@ $estados_config = [
     'cerrado'     => ['label' => 'Cerrado',     'badge' => 'badge-cerrado'],
 ];
 ?>
-<div class="kanban-board" id="kanbanBoard" data-csrf-token="<?= htmlspecialchars($csrf_token) ?>" data-user-rol="<?= $_SESSION['rol'] ?>" style="display:none">
+<div class="kanban-board" id="kanbanBoard" data-csrf-token="<?= htmlspecialchars($csrf_token) ?>" data-user-rol="<?= htmlspecialchars($_SESSION['rol']) ?>" style="display:none">
     <?php foreach ($estados_config as $estado_key => $cfg): ?>
         <div class="kanban-column" data-estado="<?= $estado_key ?>">
             <div class="kanban-column-header">
@@ -316,9 +325,6 @@ $estados_config = [
                                     <span class="text-small"><?= htmlspecialchars(date('d/m/Y H:i', strtotime($ticket['fecha_creacion']))) ?></span>
                                     <span class="badge badge-<?= htmlspecialchars($ticket['prioridad']) ?>"><?= htmlspecialchars(ucfirst($ticket['prioridad'])) ?></span>
                                 </span>
-                            </div>
-                            <div class="kanban-card-footer">
-                                <a href="<?= url('ver_ticket.php?id=' . (int) $ticket['id']) ?>" class="btn btn-outline btn-sm w-full">Ver detalle</a>
                             </div>
                         </div>
                     <?php endforeach; ?>
